@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Адмін-панель · IT Kinderschule</title>
+  <link rel="icon" href="../images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <!-- ░░ Логін ░░ -->
+  <div class="login-wrap" id="loginView">
+    <form class="login-card" id="loginForm">
+      <div class="logo"><img src="../images/logo.png" alt="" /> IT&nbsp;Kinderschule</div>
+      <p class="sub">Панель адміністратора</p>
+      <div class="field"><label>Логін</label><input name="login" autocomplete="username" required /></div>
+      <div class="field"><label>Пароль</label><input name="password" type="password" autocomplete="current-password" required /></div>
+      <button class="btn block" id="loginBtn"><i class="bi bi-box-arrow-in-right"></i> Увійти</button>
+      <div class="login-err" id="loginErr"></div>
+    </form>
+  </div>
+
+  <!-- ░░ Дашборд ░░ -->
+  <div class="shell hide" id="appView">
+    <aside class="side">
+      <div class="logo"><img src="../images/logo.png" alt="" /> Admin</div>
+      <nav>
+        <a class="active" data-view="dashboard"><i class="bi bi-grid-1x2"></i> Огляд</a>
+        <a data-view="applications"><i class="bi bi-inbox"></i> Заявки</a>
+        <a data-view="subscribers"><i class="bi bi-envelope-heart"></i> Підписники</a>
+        <a data-view="content"><i class="bi bi-pencil-square"></i> Контент</a>
+        <a href="/" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Сайт</a>
+      </nav>
+      <div class="spacer"></div>
+      <div class="logout" id="logoutBtn"><i class="bi bi-box-arrow-left"></i> Вийти</div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h1 id="viewTitle">Огляд</h1>
+        <div class="actions">
+          <button class="btn ghost sm" id="refreshBtn"><i class="bi bi-arrow-clockwise"></i> Оновити</button>
+          <a class="btn sm" id="exportBtn"><i class="bi bi-download"></i> Експорт CSV</a>
+        </div>
+      </div>
+
+      <!-- Огляд -->
+      <section id="dashboard">
+        <div class="stats" id="statCards"></div>
+        <div class="grid2">
+          <div class="panel">
+            <h3><i class="bi bi-bar-chart"></i> Заявки за курсами</h3>
+            <div id="courseBars"></div>
+          </div>
+          <div class="panel">
+            <h3><i class="bi bi-pie-chart"></i> За статусами</h3>
+            <div class="donut-wrap">
+              <svg width="150" height="150" viewBox="0 0 42 42" id="donut"></svg>
+              <div class="legend" id="donutLegend"></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3><i class="bi bi-clock-history"></i> Останні заявки</h3>
+          <div class="table-wrap" style="border:0">
+            <table><tbody id="recentBody"></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Заявки -->
+      <section id="applications" class="hide">
+        <div class="toolbar">
+          <input type="search" class="field" id="search" placeholder="Пошук за іменем, телефоном, e-mail..." style="padding:.7rem 1rem;border:1.5px solid var(--border);border-radius:12px;background:var(--elev);color:var(--text)" />
+          <div class="seg" id="statusFilter">
+            <button class="active" data-st="all">Усі</button>
+            <button data-st="new">Нові</button>
+            <button data-st="contacted">Контакт</button>
+            <button data-st="enrolled">Записані</button>
+            <button data-st="rejected">Відмова</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-sort="createdAt">Дата</th>
+                <th data-sort="childName">Дитина</th>
+                <th class="hide-sm" data-sort="childAge">Вік</th>
+                <th data-sort="course">Курс</th>
+                <th class="hide-sm" data-sort="parentName">Батьки</th>
+                <th class="hide-sm">Контакти</th>
+                <th data-sort="status">Статус</th>
+              </tr>
+            </thead>
+            <tbody id="appsBody"></tbody>
+          </table>
+          <div class="empty hide" id="emptyMsg"><i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:.5rem"></i>Заявок поки немає</div>
+        </div>
+      </section>
+
+      <!-- Підписники розсилки -->
+      <section id="subscribers" class="hide">
+        <div class="toolbar" style="justify-content:space-between">
+          <p class="cms-hint" id="subsCount"></p>
+          <a class="btn sm" id="subsExport"><i class="bi bi-download"></i> Експорт CSV</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:50px">#</th><th>Email</th><th>Дата підписки</th><th style="width:60px"></th></tr></thead>
+            <tbody id="subsBody"></tbody>
+          </table>
+          <div class="empty hide" id="subsEmpty"><i class="bi bi-envelope-heart" style="font-size:2rem;display:block;margin-bottom:.5rem"></i>Підписників поки немає</div>
+        </div>
+      </section>
+
+      <!-- Контент (CMS) -->
+      <section id="content" class="hide">
+        <div class="cms-tabs" id="cmsTabs">
+          <button class="active" data-tab="hero"><i class="bi bi-house-heart"></i> Головна</button>
+          <button data-tab="about"><i class="bi bi-info-circle"></i> Про нас</button>
+          <button data-tab="courses"><i class="bi bi-mortarboard"></i> Курси</button>
+          <button data-tab="teachers"><i class="bi bi-people"></i> Викладачі</button>
+          <button data-tab="gallery"><i class="bi bi-images"></i> Галерея</button>
+          <button data-tab="reviews"><i class="bi bi-chat-quote"></i> Відгуки</button>
+          <button data-tab="faq"><i class="bi bi-question-circle"></i> FAQ</button>
+          <button data-tab="settings"><i class="bi bi-link-45deg"></i> Контакти</button>
+        </div>
+
+        <div class="cms-pane" id="pane-hero">
+          <div class="cms-head"><p class="cms-hint">Головний банер сайту: фото, заголовок і показники. Виділіть слово зірочками, напр. <code>*майбутнє*</code>, щоб зробити його кольоровим.</p></div>
+          <div id="heroEditor"></div>
+        </div>
+
+        <div class="cms-pane hide" id="pane-about">
+          <div class="cms-head"><p class="cms-hint">Секція «Про нас»: фото, заголовок, текст та чотири переваги.</p></div>
+          <div id="aboutEditor"></div>
+        </div>
+
+        <div class="cms-pane hide" id="pane-courses">
+          <div class="cms-head"><p class="cms-hint">Додавайте та редагуйте курси. Новий курс одразу з'явиться на сайті й у формі заявки.</p>
+            <button class="btn sm" id="addCourse"><i class="bi bi-plus-lg"></i> Додати курс</button></div>
+          <div id="courseEditor" class="editor-list"></div>
+        </div>
+
+        <div class="cms-pane hide" id="pane-gallery">
+          <div class="cms-head"><p class="cms-hint">Фотографії із занять. Завантажте нові або видаліть зайві.</p>
+            <label class="btn sm"><i class="bi bi-upload"></i> Завантажити фото<input type="file" accept="image/*" data-upload="gallery" multiple hidden></label></div>
+          <div id="galleryEditor" class="gallery-edit-grid"></div>
+        </div>
+
+        <div class="cms-pane hide" id="pane-teachers">
+          <div class="cms-head"><p class="cms-hint">Картки викладачів у секції «Наша команда».</p>
+            <button class="btn sm" id="addTeacher"><i class="bi bi-plus-lg"></i> Додати викладача</button></div>
+          <div id="teacherEditor" class="editor-list"></div>
+        </div>
+
+        <div class="cms-pane hide" id="pane-reviews">
+          <div class="cms-head"><p class="cms-hint">Відгуки батьків та учнів.</p>
+            <button class="btn sm" id="addReview"><i class="bi bi-plus-lg"></i> Додати відгук</button></div>
+          <div id="reviewEditor" class="editor-list"></div>
+        </div>
+
+        <div class="cms-pane hide" id="pane-faq">
+          <div class="cms-head"><p class="cms-hint">Часті запитання та відповіді.</p>
+            <button class="btn sm" id="addFaq"><i class="bi bi-plus-lg"></i> Додати запитання</button></div>
+          <div id="faqEditor" class="editor-list"></div>
+        </div>
+
+        <div class="cms-pane hide" id="pane-settings">
+          <div class="grid2">
+            <div class="panel">
+              <h3><i class="bi bi-link-45deg"></i> Соцмережі</h3>
+              <p class="cms-hint" style="margin-bottom:1rem">Залиште поле порожнім, щоб приховати іконку. Додайте посилання — і вона з'явиться на сайті.</p>
+              <div class="field"><label><i class="bi bi-facebook"></i> Facebook</label><input id="s-facebook" placeholder="https://facebook.com/..." /></div>
+              <div class="field"><label><i class="bi bi-instagram"></i> Instagram</label><input id="s-instagram" placeholder="https://instagram.com/..." /></div>
+              <div class="field"><label><i class="bi bi-whatsapp"></i> WhatsApp</label><input id="s-whatsapp" placeholder="https://wa.me/..." /></div>
+              <div class="field"><label><i class="bi bi-telegram"></i> Telegram</label><input id="s-telegram" placeholder="https://t.me/..." /></div>
+              <div class="field"><label><i class="bi bi-youtube"></i> YouTube</label><input id="s-youtube" placeholder="https://youtube.com/..." /></div>
+            </div>
+            <div class="panel">
+              <h3><i class="bi bi-geo-alt"></i> Контакти</h3>
+              <div class="field"><label>E-mail</label><input id="c-email" /></div>
+              <div class="field"><label>Телефон</label><input id="c-phone" placeholder="+49 ..." /></div>
+              <div class="field"><label>Адреса (UA)</label><input id="c-addressUk" /></div>
+              <div class="field"><label>Адреса (DE)</label><input id="c-addressDe" /></div>
+              <div class="field"><label>Посилання на карту (Google Maps)</label><input id="c-addressUrl" /></div>
+              <div class="field"><label>Розклад (UA)</label><input id="c-scheduleUk" /></div>
+              <div class="field"><label>Розклад (DE)</label><input id="c-scheduleDe" /></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cms-savebar">
+          <span class="cms-status" id="cmsStatus"></span>
+          <button class="btn ghost sm" id="cmsReset"><i class="bi bi-arrow-counterclockwise"></i> Скинути зміни</button>
+          <button class="btn" id="cmsSave"><i class="bi bi-check-lg"></i> Зберегти та опублікувати</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ░░ Модалка деталей ░░ -->
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div><h3 id="mTitle"></h3><div class="course-pill" id="mCourse"></div></div>
+        <button class="x" id="mClose"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="kv" id="mKv"></div>
+        <div class="field"><label>Статус</label>
+          <select id="mStatus">
+            <option value="new">Нова</option>
+            <option value="contacted">Зв'язалися</option>
+            <option value="enrolled">Записаний</option>
+            <option value="rejected">Відмова</option>
+          </select>
+        </div>
+        <div class="field"><label>Нотатка (внутрішня)</label><textarea id="mNote" rows="3" placeholder="Коментар для команди..."></textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn danger sm" id="mDelete"><i class="bi bi-trash"></i> Видалити</button>
+        <div style="display:flex;gap:.6rem">
+          <a class="btn ghost sm" id="mMail"><i class="bi bi-envelope"></i> Написати</a>
+          <button class="btn sm" id="mSave"><i class="bi bi-check-lg"></i> Зберегти</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+  <script src="admin.js"></script>
+</body>
+</html>

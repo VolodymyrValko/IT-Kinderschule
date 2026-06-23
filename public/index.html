@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="pageTitle">IT Kinderschule — курси робототехніки та програмування для дітей у Гамбурзі</title>
+  <meta name="description" data-i18n="metaDesc" content="IT Kinderschule у Гамбурзі: курси STEM для дітей 7–18 років — робототехніка, програмування, Arduino, micro:bit, штучний інтелект. Запишіться на пробне заняття!" />
+  <meta property="og:title" content="IT Kinderschule — робототехніка та програмування для дітей" />
+  <meta property="og:description" content="Курси STEM для дітей 7–18 років у Гамбурзі. Пробне заняття безкоштовно." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="scroll-progress"></div>
+
+  <!-- ░░ Навбар ░░ -->
+  <header class="nav" id="nav">
+    <div class="container">
+      <a href="#hero" class="brand">
+        <img src="images/logo.png" alt="IT Kinderschule" />
+        <span>IT&nbsp;<b>Kinderschule</b></span>
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="#about" data-i18n="navAbout">Про нас</a>
+        <a href="#courses" data-i18n="navCourses">Курси</a>
+        <a href="#how" data-i18n="navHow">Як навчаємо</a>
+        <a href="#team" data-i18n="navTeam">Викладачі</a>
+        <a href="#gallery" data-i18n="navGallery">Галерея</a>
+        <a href="#reviews" data-i18n="navReviews">Відгуки</a>
+        <a href="#faq" data-i18n="navFaq">FAQ</a>
+      </nav>
+      <div class="nav-tools">
+        <div class="lang" id="lang">
+          <button data-lang="uk" class="active">UA</button>
+          <button data-lang="de">DE</button>
+        </div>
+        <button class="icon-btn" id="themeToggle" aria-label="Тема"><i class="bi bi-moon-stars"></i></button>
+        <a href="#enroll" class="btn" data-i18n="navCta">Записатися</a>
+        <button class="icon-btn burger" id="burger" aria-label="Меню"><i class="bi bi-list"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ░░ Hero ░░ -->
+  <section class="hero" id="hero">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="pill reveal"><i class="bi bi-stars"></i> <span id="heroPill">Школа майбутніх інженерів · Гамбург</span></span>
+        <h1 class="reveal d1" id="heroTitle">Програмуємо <span class="gradient-text">майбутнє</span> разом із дітьми</h1>
+        <p class="lead reveal d2" id="heroSub">Захопливі курси робототехніки та програмування для дітей 7–18 років. Від першого робота до власного сайту й проєктів зі штучного інтелекту.</p>
+        <div class="hero-cta reveal d3">
+          <a href="#enroll" class="btn btn--lg" data-i18n="heroCta1"><i class="bi bi-rocket-takeoff"></i> Безкоштовне пробне заняття</a>
+          <a href="#courses" class="btn btn--ghost btn--lg" data-i18n="heroCta2">Переглянути курси</a>
+        </div>
+        <div class="hero-stats reveal d3" id="heroStats"></div>
+      </div>
+      <div class="hero-visual reveal d2">
+        <img class="photo" id="heroPhoto" src="images/20250524_170940.jpg" alt="Заняття IT Kinderschule" />
+        <div class="badge-card bc1"><i class="bi bi-robot"></i> <span data-i18n="badge1">Справжні роботи</span></div>
+        <div class="badge-card bc2"><i class="bi bi-emoji-smile"></i> <span data-i18n="badge2">Навчання через гру</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ Маркі ░░ -->
+  <div class="marquee">
+    <div class="marquee-track">
+      <span><i class="bi bi-cpu"></i> micro:bit</span><span><i class="bi bi-motherboard"></i> Arduino</span>
+      <span><i class="bi bi-robot"></i> Robotics</span><span><i class="bi bi-braces"></i> Python</span>
+      <span><i class="bi bi-palette"></i> Scratch</span><span><i class="bi bi-code-slash"></i> HTML/CSS/JS</span>
+      <span><i class="bi bi-cpu-fill"></i> AI</span><span><i class="bi bi-lightbulb"></i> STEM</span>
+      <span><i class="bi bi-cpu"></i> micro:bit</span><span><i class="bi bi-motherboard"></i> Arduino</span>
+      <span><i class="bi bi-robot"></i> Robotics</span><span><i class="bi bi-braces"></i> Python</span>
+      <span><i class="bi bi-palette"></i> Scratch</span><span><i class="bi bi-code-slash"></i> HTML/CSS/JS</span>
+      <span><i class="bi bi-cpu-fill"></i> AI</span><span><i class="bi bi-lightbulb"></i> STEM</span>
+    </div>
+  </div>
+
+  <!-- ░░ Про нас ░░ -->
+  <section class="section" id="about">
+    <div class="container about-grid">
+      <div class="about-photos reveal">
+        <img id="aboutPhoto" src="images/IMG_2840.jpg" alt="Викладачі IT Kinderschule" />
+      </div>
+      <div class="reveal d1">
+        <span class="eyebrow" data-i18n="aboutEyebrow">Про школу</span>
+        <h2 id="aboutTitle">Чому батьки обирають IT Kinderschule?</h2>
+        <p id="aboutText">Ми віримо, що кожна дитина має потенціал стати винахідником.</p>
+        <ul class="feature-list" id="featureList"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ Курси ░░ -->
+  <section class="section bg-soft" id="courses">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="coursesEyebrow">Програми навчання</span>
+        <h2 data-i18n="coursesTitle">Обери свій напрямок</h2>
+        <p data-i18n="coursesSub">П'ять курсів для різного віку та рівня — від першого знайомства з кодом до серйозних проєктів.</p>
+      </div>
+      <div class="course-filters reveal d1">
+        <button class="chip active" data-filter="all" data-i18n="filterAll">Усі</button>
+        <button class="chip" data-filter="young" data-i18n="filterYoung">7–12 років</button>
+        <button class="chip" data-filter="teen" data-i18n="filterTeen">12–18 років</button>
+        <button class="chip" data-filter="robotics" data-i18n="filterRobotics">Робототехніка</button>
+        <button class="chip" data-filter="coding" data-i18n="filterCoding">Програмування</button>
+      </div>
+      <div class="courses-grid" id="coursesGrid"><!-- наповнюється з JS --></div>
+    </div>
+  </section>
+
+  <!-- ░░ Як навчаємо ░░ -->
+  <section class="section" id="how">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="howEyebrow">Процес</span>
+        <h2 data-i18n="howTitle">Як проходить навчання</h2>
+        <p data-i18n="howSub">Чотири прості кроки від заявки до першого власного проєкту.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><div class="n">1</div><h4 data-i18n="step1t">Заявка</h4><p data-i18n="step1d">Залиште заявку на сайті — ми зв'яжемося протягом дня.</p></div>
+        <div class="step reveal d1"><div class="n">2</div><h4 data-i18n="step2t">Пробне заняття</h4><p data-i18n="step2d">Безкоштовний урок, щоб дитина спробувала й обрала напрямок.</p></div>
+        <div class="step reveal d2"><div class="n">3</div><h4 data-i18n="step3t">Навчання</h4><p data-i18n="step3d">Заняття щосуботи в групах із реальними проєктами.</p></div>
+        <div class="step reveal d3"><div class="n">4</div><h4 data-i18n="step4t">Результат</h4><p data-i18n="step4d">Власний робот, гра або сайт — і портфоліо для майбутнього.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ Викладачі ░░ -->
+  <section class="section bg-soft" id="team">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="teamEyebrow">Наша команда</span>
+        <h2 data-i18n="teamTitle">Викладачі, які надихають</h2>
+        <p data-i18n="teamSub">Інженери та розробники з досвідом, які люблять ділитися знаннями.</p>
+      </div>
+      <div class="team-grid" id="teamGrid"><!-- з JS --></div>
+    </div>
+  </section>
+
+  <!-- ░░ Галерея ░░ -->
+  <section class="section" id="gallery">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="galleryEyebrow">Галерея</span>
+        <h2 data-i18n="galleryTitle">Як проходять наші заняття</h2>
+        <p data-i18n="gallerySub">Атмосфера творчості, командної роботи та маленьких відкриттів.</p>
+      </div>
+      <div class="gallery-grid reveal" id="galleryGrid"><!-- з JS (контент) --></div>
+    </div>
+  </section>
+
+  <!-- ░░ Відгуки ░░ -->
+  <section class="section bg-soft" id="reviews">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="reviewsEyebrow">Відгуки</span>
+        <h2 data-i18n="reviewsTitle">Що кажуть батьки та учні</h2>
+      </div>
+      <div class="reviews-track" id="reviewsTrack"><!-- з JS --></div>
+    </div>
+  </section>
+
+  <!-- ░░ FAQ ░░ -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="faqEyebrow">Питання</span>
+        <h2 data-i18n="faqTitle">Часті запитання</h2>
+      </div>
+      <div class="faq" id="faqList"><!-- з JS --></div>
+    </div>
+  </section>
+
+  <!-- ░░ Заявка ░░ -->
+  <section class="section bg-soft" id="enroll">
+    <div class="container enroll-wrap">
+      <div class="enroll-info reveal">
+        <span class="eyebrow" data-i18n="enrollEyebrow">Запис на курси</span>
+        <h2 data-i18n="enrollTitle">Запишіть дитину на безкоштовне пробне заняття</h2>
+        <p data-i18n="enrollSub">Заповніть коротку форму — і ми зв'яжемося з вами, щоб узгодити зручний час. Жодних зобов'язань.</p>
+        <div id="contactLines"><!-- з JS (контент) --></div>
+        <div class="map-frame">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d2367.319883046379!2d10.0137822!3d53.605596!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47b189a90b089e25%3A0x6f14c46a9715ffec!2sUkraine%20Haus%20in%20Hamburg!5e0!3m2!1suk!2sde!4v1754017670459!5m2!1suk!2sde" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Карта"></iframe>
+        </div>
+      </div>
+
+      <div class="form-card reveal d1">
+        <div class="steps-bar"><div class="sdot done"></div><div class="sdot"></div><div class="sdot"></div></div>
+        <form id="enrollForm" novalidate>
+          <!-- крок 1: курс -->
+          <div class="fstep active" data-step="0">
+            <h4 data-i18n="fs1t">Який курс цікавий?</h4>
+            <p class="hint" data-i18n="fs1h">Не визначилися? Оберіть «Допоможіть обрати».</p>
+            <div class="course-pick" id="coursePick"></div>
+            <div class="err" id="courseErr" data-i18n="errCourse" style="display:none">Оберіть курс</div>
+            <div class="form-nav"><button type="button" class="btn btn--block" data-next data-i18n="btnNext">Далі <i class="bi bi-arrow-right"></i></button></div>
+          </div>
+          <!-- крок 2: дитина -->
+          <div class="fstep" data-step="1">
+            <h4 data-i18n="fs2t">Про дитину</h4>
+            <p class="hint" data-i18n="fs2h">Щоб ми підібрали відповідну групу.</p>
+            <div class="field"><label data-i18n="lblChildName">Ім'я дитини</label><input name="childName" required /><div class="err" data-i18n="errName">Вкажіть ім'я</div></div>
+            <div class="field"><label data-i18n="lblChildAge">Вік дитини</label><input name="childAge" type="number" min="5" max="20" required /><div class="err" data-i18n="errAge">Вік 5–20 років</div></div>
+            <div class="field"><label data-i18n="lblExp">Досвід у програмуванні</label>
+              <select name="experience">
+                <option value="none" data-i18n="expNone">Без досвіду</option>
+                <option value="little" data-i18n="expLittle">Трохи пробували</option>
+                <option value="some" data-i18n="expSome">Є базові знання</option>
+              </select>
+            </div>
+            <div class="form-nav">
+              <button type="button" class="btn btn--ghost" data-prev><i class="bi bi-arrow-left"></i></button>
+              <button type="button" class="btn" data-next data-i18n="btnNext">Далі <i class="bi bi-arrow-right"></i></button>
+            </div>
+          </div>
+          <!-- крок 3: контакти -->
+          <div class="fstep" data-step="2">
+            <h4 data-i18n="fs3t">Контакти батьків</h4>
+            <p class="hint" data-i18n="fs3h">Ми зв'яжемося з вами найближчим часом.</p>
+            <div class="field"><label data-i18n="lblParent">Ваше ім'я</label><input name="parentName" required /><div class="err" data-i18n="errParent">Вкажіть ім'я</div></div>
+            <div class="field"><label data-i18n="lblPhone">Телефон</label><input name="phone" type="tel" required placeholder="+49 ..." /><div class="err" data-i18n="errPhone">Невірний номер</div></div>
+            <div class="field"><label data-i18n="lblEmail">E-mail</label><input name="email" type="email" required /><div class="err" data-i18n="errEmail">Невірний e-mail</div></div>
+            <div class="field"><label data-i18n="lblMsg">Коментар (необов'язково)</label><textarea name="message"></textarea></div>
+            <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+            <div class="form-nav">
+              <button type="button" class="btn btn--ghost" data-prev><i class="bi bi-arrow-left"></i></button>
+              <button type="submit" class="btn" id="submitBtn" data-i18n="btnSubmit"><i class="bi bi-send"></i> Надіслати заявку</button>
+            </div>
+          </div>
+        </form>
+        <div class="form-success" id="formSuccess">
+          <div class="ok-ic"><i class="bi bi-check-lg"></i></div>
+          <h4 data-i18n="successTitle">Заявку надіслано! 🎉</h4>
+          <p class="hint" data-i18n="successText">Дякуємо! Ми зв'яжемося з вами найближчим часом. Лист-підтвердження вже летить на вашу пошту.</p>
+          <button class="btn btn--ghost" id="againBtn" data-i18n="btnAgain">Надіслати ще одну</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ Розсилка ░░ -->
+  <section class="section" id="newsletter">
+    <div class="container">
+      <div class="newsletter reveal">
+        <h2 data-i18n="nlTitle">Будьте в курсі новин школи</h2>
+        <p data-i18n="nlSub">Анонси наборів, майстер-класів та подій — раз на місяць, без спаму.</p>
+        <form id="nlForm">
+          <input type="email" name="email" placeholder="ваш@email.com" required />
+          <button class="btn" type="submit" data-i18n="nlBtn">Підписатися</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ Футер ░░ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand"><img src="images/logo.png" alt=""> <span>IT&nbsp;<b>Kinderschule</b></span></div>
+          <p data-i18n="footAbout">Школа робототехніки та програмування для дітей у Гамбурзі. Створюємо майбутніх інженерів через гру та творчість.</p>
+          <div class="socials" id="footerSocials"><!-- з JS (контент) --></div>
+        </div>
+        <div>
+          <h5 data-i18n="footNav">Навігація</h5>
+          <ul>
+            <li><a href="#about" data-i18n="navAbout">Про нас</a></li>
+            <li><a href="#courses" data-i18n="navCourses">Курси</a></li>
+            <li><a href="#gallery" data-i18n="navGallery">Галерея</a></li>
+            <li><a href="#reviews" data-i18n="navReviews">Відгуки</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5 data-i18n="footCourses">Курси</h5>
+          <ul id="footerCoursesList"><!-- з JS (контент) --></ul>
+        </div>
+        <div>
+          <h5 data-i18n="footContact">Контакти</h5>
+          <ul id="footerContactList"><!-- з JS (контент) --></ul>
+        </div>
+      </div>
+      <div class="footer-bottom">© <span id="year"></span> IT Kinderschule · <span data-i18n="footRights">Усі права захищені</span></div>
+    </div>
+  </footer>
+
+  <button id="to-top" aria-label="Наверх"><i class="bi bi-arrow-up"></i></button>
+  <div class="lightbox" id="lightbox">
+    <button class="close" aria-label="Закрити"><i class="bi bi-x-lg"></i></button>
+    <button class="nav-arrow prev" aria-label="Назад"><i class="bi bi-chevron-left"></i></button>
+    <img src="" alt="" id="lightboxImg" />
+    <button class="nav-arrow next" aria-label="Далі"><i class="bi bi-chevron-right"></i></button>
+  </div>
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
