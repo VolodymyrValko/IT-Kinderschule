@@ -191,3 +191,60 @@ tbody tr:hover { background: var(--panel); }
   .grid2 { grid-template-columns: 1fr; }
   .hide-sm { display: none; }
 }
+
+/* ═══════════ Конструктор сторінки ═══════════ */
+.cstr { display: grid; grid-template-columns: 1fr 360px; gap: 16px; height: calc(100vh - 132px); min-height: 540px; }
+.cstr-inspector { background: var(--elev); border: 1px solid var(--border); border-radius: var(--radius); overflow: auto; }
+.cstr-main { display: flex; flex-direction: column; min-width: 0; }
+.cstr-bar { display: flex; align-items: center; gap: 0.45rem; margin-bottom: 10px; flex-wrap: wrap; }
+.cstr-bar .cms-status { margin-right: auto; font-size: 0.8rem; min-width: 0; }
+.cstr-bar .btn.sm { padding: 0.45rem 0.7rem; font-size: 0.82rem; gap: 0.35rem; }
+.cstr-bar .seg button { padding: 0.45rem 0.7rem; }
+.cstr-frame-wrap { flex: 1; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: #fff; }
+#cstrFrame { width: 100%; height: 100%; border: 0; display: block; }
+
+.cstr-inspector { display: flex; flex-direction: column; }
+.insp-head { padding: 14px 16px; border-bottom: 1px solid var(--border); font-family: 'Montserrat'; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; position: sticky; top: 0; background: var(--elev); z-index: 2; }
+#inspBody { padding: 16px; }
+.insp-empty { text-align: center; color: var(--mute); padding: 26px 8px; }
+.insp-empty i { font-size: 1.7rem; display: block; margin-bottom: 10px; opacity: 0.6; }
+.insp-empty p { font-size: 0.9rem; line-height: 1.5; }
+.insp-sub { font-size: 0.95rem; margin-bottom: 0.5rem; }
+/* В інспекторі (вузька колонка) двомовні поля — один стовпець */
+.cstr-inspector .lang-cols, .cstr-inspector .edit-row.thirds { grid-template-columns: 1fr; }
+
+.slot-list { display: grid; gap: 8px; }
+.slot { display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid var(--border); border-radius: 11px; padding: 8px 10px; background: var(--panel); }
+.slot.empty { border-style: dashed; }
+.slot-info { display: flex; flex-direction: column; min-width: 0; }
+.slot-info b { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 108px; }
+.slot-info span { font-size: 0.72rem; color: var(--mute); }
+.slot-acts { display: flex; gap: 4px; flex: 0 0 auto; }
+.slot .mini { width: 28px; height: 28px; }
+
+/* Підказки про інлайн-редагування + «тонкі» картки інспектора */
+.inline-note { color: var(--mute); font-size: 0.8rem; display: flex; gap: 0.4rem; align-items: flex-start; margin-top: 6px; line-height: 1.4; }
+.inline-note i { color: var(--cyan); margin-top: 1px; }
+.edit-card.slim .edit-head { border-bottom: 0; }
+.feat-icons { display: grid; gap: 8px; }
+.feat-row { display: flex; align-items: center; gap: 8px; }
+.feat-row .feat-prev { width: 36px; height: 36px; flex: 0 0 auto; border-radius: 10px; display: grid; place-items: center; background: var(--panel); border: 1px solid var(--border); color: var(--cyan); font-size: 1.05rem; }
+.feat-row select { flex: 1; }
+
+.slot-io { display: flex; gap: 8px; margin-top: 12px; }
+.slot-io .btn { flex: 1; }
+.edit-card.just-added { outline: 2px solid var(--mint); outline-offset: 1px; animation: justAdded 1.4s ease; }
+@keyframes justAdded { from { background: color-mix(in srgb, var(--mint) 18%, var(--elev)); } to { background: var(--elev); } }
+
+@media (max-width: 1100px) {
+  .cstr { grid-template-columns: 1fr; height: auto; }
+  .cstr-frame-wrap { height: 70vh; }
+}
+
+/* ═══════════ Тематичний скролбар (під тему адмінки) ═══════════ */
+* { scrollbar-width: thin; scrollbar-color: var(--violet) var(--panel); }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--panel); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: linear-gradient(var(--violet), var(--cyan)); border-radius: 10px; border: 2px solid var(--panel); }
+::-webkit-scrollbar-thumb:hover { background: var(--violet); }
+::-webkit-scrollbar-corner { background: var(--panel); }

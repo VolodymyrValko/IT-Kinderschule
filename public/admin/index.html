@@ -118,87 +118,112 @@
         </div>
       </section>
 
-      <!-- Контент (CMS) -->
+      <!-- Конструктор сторінки -->
       <section id="content" class="hide">
-        <div class="cms-tabs" id="cmsTabs">
-          <button class="active" data-tab="hero"><i class="bi bi-house-heart"></i> Головна</button>
-          <button data-tab="about"><i class="bi bi-info-circle"></i> Про нас</button>
-          <button data-tab="courses"><i class="bi bi-mortarboard"></i> Курси</button>
-          <button data-tab="teachers"><i class="bi bi-people"></i> Викладачі</button>
-          <button data-tab="gallery"><i class="bi bi-images"></i> Галерея</button>
-          <button data-tab="reviews"><i class="bi bi-chat-quote"></i> Відгуки</button>
-          <button data-tab="faq"><i class="bi bi-question-circle"></i> FAQ</button>
-          <button data-tab="settings"><i class="bi bi-link-45deg"></i> Контакти</button>
-        </div>
-
-        <div class="cms-pane" id="pane-hero">
-          <div class="cms-head"><p class="cms-hint">Головний банер сайту: фото, заголовок і показники. Виділіть слово зірочками, напр. <code>*майбутнє*</code>, щоб зробити його кольоровим.</p></div>
-          <div id="heroEditor"></div>
-        </div>
-
-        <div class="cms-pane hide" id="pane-about">
-          <div class="cms-head"><p class="cms-hint">Секція «Про нас»: фото, заголовок, текст та чотири переваги.</p></div>
-          <div id="aboutEditor"></div>
-        </div>
-
-        <div class="cms-pane hide" id="pane-courses">
-          <div class="cms-head"><p class="cms-hint">Додавайте та редагуйте курси. Новий курс одразу з'явиться на сайті й у формі заявки.</p>
-            <button class="btn sm" id="addCourse"><i class="bi bi-plus-lg"></i> Додати курс</button></div>
-          <div id="courseEditor" class="editor-list"></div>
-        </div>
-
-        <div class="cms-pane hide" id="pane-gallery">
-          <div class="cms-head"><p class="cms-hint">Фотографії із занять. Завантажте нові або видаліть зайві.</p>
-            <label class="btn sm"><i class="bi bi-upload"></i> Завантажити фото<input type="file" accept="image/*" data-upload="gallery" multiple hidden></label></div>
-          <div id="galleryEditor" class="gallery-edit-grid"></div>
-        </div>
-
-        <div class="cms-pane hide" id="pane-teachers">
-          <div class="cms-head"><p class="cms-hint">Картки викладачів у секції «Наша команда».</p>
-            <button class="btn sm" id="addTeacher"><i class="bi bi-plus-lg"></i> Додати викладача</button></div>
-          <div id="teacherEditor" class="editor-list"></div>
-        </div>
-
-        <div class="cms-pane hide" id="pane-reviews">
-          <div class="cms-head"><p class="cms-hint">Відгуки батьків та учнів.</p>
-            <button class="btn sm" id="addReview"><i class="bi bi-plus-lg"></i> Додати відгук</button></div>
-          <div id="reviewEditor" class="editor-list"></div>
-        </div>
-
-        <div class="cms-pane hide" id="pane-faq">
-          <div class="cms-head"><p class="cms-hint">Часті запитання та відповіді.</p>
-            <button class="btn sm" id="addFaq"><i class="bi bi-plus-lg"></i> Додати запитання</button></div>
-          <div id="faqEditor" class="editor-list"></div>
-        </div>
-
-        <div class="cms-pane hide" id="pane-settings">
-          <div class="grid2">
-            <div class="panel">
-              <h3><i class="bi bi-link-45deg"></i> Соцмережі</h3>
-              <p class="cms-hint" style="margin-bottom:1rem">Залиште поле порожнім, щоб приховати іконку. Додайте посилання — і вона з'явиться на сайті.</p>
-              <div class="field"><label><i class="bi bi-facebook"></i> Facebook</label><input id="s-facebook" placeholder="https://facebook.com/..." /></div>
-              <div class="field"><label><i class="bi bi-instagram"></i> Instagram</label><input id="s-instagram" placeholder="https://instagram.com/..." /></div>
-              <div class="field"><label><i class="bi bi-whatsapp"></i> WhatsApp</label><input id="s-whatsapp" placeholder="https://wa.me/..." /></div>
-              <div class="field"><label><i class="bi bi-telegram"></i> Telegram</label><input id="s-telegram" placeholder="https://t.me/..." /></div>
-              <div class="field"><label><i class="bi bi-youtube"></i> YouTube</label><input id="s-youtube" placeholder="https://youtube.com/..." /></div>
+        <div class="cstr">
+          <!-- ── Полотно (живий сайт у iframe) ── -->
+          <div class="cstr-main">
+            <div class="cstr-bar">
+              <div class="seg" id="cstrLang"><button class="active" data-l="uk">UA</button><button data-l="de">DE</button></div>
+              <span class="cms-status" id="cmsStatus"></span>
+              <button class="btn ghost sm" id="openSettings"><i class="bi bi-link-45deg"></i> Контакти</button>
+              <button class="btn ghost sm" id="openSlots"><i class="bi bi-folder"></i> Слоти</button>
+              <button class="btn ghost sm" id="resetDefault"><i class="bi bi-stars"></i> Стандарт</button>
+              <button class="btn ghost sm" id="cmsReset"><i class="bi bi-arrow-counterclockwise"></i> Скинути</button>
+              <button class="btn sm" id="cmsSave"><i class="bi bi-cloud-arrow-up"></i> Опублікувати</button>
             </div>
-            <div class="panel">
-              <h3><i class="bi bi-geo-alt"></i> Контакти</h3>
-              <div class="field"><label>E-mail</label><input id="c-email" /></div>
-              <div class="field"><label>Телефон</label><input id="c-phone" placeholder="+49 ..." /></div>
-              <div class="field"><label>Адреса (UA)</label><input id="c-addressUk" /></div>
-              <div class="field"><label>Адреса (DE)</label><input id="c-addressDe" /></div>
-              <div class="field"><label>Посилання на карту (Google Maps)</label><input id="c-addressUrl" /></div>
-              <div class="field"><label>Розклад (UA)</label><input id="c-scheduleUk" /></div>
-              <div class="field"><label>Розклад (DE)</label><input id="c-scheduleDe" /></div>
+            <div class="cstr-frame-wrap">
+              <iframe id="cstrFrame" src="/?builder=1" title="Полотно сайту"></iframe>
             </div>
           </div>
-        </div>
 
-        <div class="cms-savebar">
-          <span class="cms-status" id="cmsStatus"></span>
-          <button class="btn ghost sm" id="cmsReset"><i class="bi bi-arrow-counterclockwise"></i> Скинути зміни</button>
-          <button class="btn" id="cmsSave"><i class="bi bi-check-lg"></i> Зберегти та опублікувати</button>
+          <!-- ── Інспектор ── -->
+          <aside class="cstr-inspector">
+            <div class="insp-head"><i class="bi bi-sliders"></i> <span id="inspTitle">Редагування</span></div>
+            <div id="inspBody">
+              <div class="insp-empty" id="inspEmpty">
+                <i class="bi bi-cursor-text"></i>
+                <p>Натисніть на будь-який <b>текст</b> на полотні, щоб редагувати його прямо там — заголовки, описи, розсилку, футер тощо.</p>
+                <p>Натисніть на секцію з <b>фото чи картками</b> (Головна, Про нас, Курси, Викладачі, Галерея, Відгуки, FAQ) — її поля відкриються тут.</p>
+              </div>
+
+              <div class="insp-pane hide" data-pane="hero">
+                <p class="cms-hint">Головний банер: фото, заголовок і показники. Виділіть слово зірочками, напр. <code>*майбутнє*</code>.</p>
+                <div id="heroEditor"></div>
+              </div>
+
+              <div class="insp-pane hide" data-pane="about">
+                <p class="cms-hint">Секція «Про нас»: фото, заголовок, текст та переваги.</p>
+                <div id="aboutEditor"></div>
+              </div>
+
+              <div class="insp-pane hide" data-pane="courses">
+                <div class="cms-head"><p class="cms-hint">Курси. Новий курс одразу у формі заявки.</p>
+                  <button class="btn sm" id="addCourse"><i class="bi bi-plus-lg"></i> Курс</button></div>
+                <div id="courseEditor" class="editor-list"></div>
+              </div>
+
+              <div class="insp-pane hide" data-pane="teachers">
+                <div class="cms-head"><p class="cms-hint">Картки викладачів.</p>
+                  <button class="btn sm" id="addTeacher"><i class="bi bi-plus-lg"></i> Викладач</button></div>
+                <div id="teacherEditor" class="editor-list"></div>
+              </div>
+
+              <div class="insp-pane hide" data-pane="gallery">
+                <div class="cms-head"><p class="cms-hint">Фото із занять.</p>
+                  <label class="btn sm"><i class="bi bi-upload"></i> Фото<input type="file" accept="image/*" data-upload="gallery" multiple hidden></label></div>
+                <div id="galleryEditor" class="gallery-edit-grid"></div>
+              </div>
+
+              <div class="insp-pane hide" data-pane="reviews">
+                <div class="cms-head"><p class="cms-hint">Відгуки батьків та учнів.</p>
+                  <button class="btn sm" id="addReview"><i class="bi bi-plus-lg"></i> Відгук</button></div>
+                <div id="reviewEditor" class="editor-list"></div>
+              </div>
+
+              <div class="insp-pane hide" data-pane="faq">
+                <div class="cms-head"><p class="cms-hint">Часті запитання.</p>
+                  <button class="btn sm" id="addFaq"><i class="bi bi-plus-lg"></i> Запитання</button></div>
+                <div id="faqEditor" class="editor-list"></div>
+              </div>
+
+              <div class="insp-pane hide" data-pane="static">
+                <p class="cms-hint" id="staticNote"></p>
+              </div>
+
+              <div class="insp-pane hide" data-pane="block">
+                <div id="inspBlock"></div>
+              </div>
+
+              <div class="insp-pane hide" data-pane="slots">
+                <p class="cms-hint" style="margin-bottom:1rem">Збережіть поточний вигляд у слот, щоб повернутися до нього пізніше. Завантаження слота не публікує — потім натисніть «Опублікувати».</p>
+                <div id="slotList" class="slot-list"></div>
+                <div class="slot-io">
+                  <button class="btn ghost sm" id="exportContent"><i class="bi bi-box-arrow-down"></i> Експорт у файл</button>
+                  <label class="btn ghost sm"><i class="bi bi-box-arrow-up"></i> Імпорт з файлу<input type="file" id="importContent" accept="application/json,.json" hidden></label>
+                </div>
+                <p class="cms-hint" style="margin-top:8px">Файл містить увесь вигляд сайту (тексти, фото, порядок). Імпорт не публікує — натисніть «Опублікувати».</p>
+              </div>
+
+              <div class="insp-pane hide" data-pane="settings">
+                <h3 class="insp-sub"><i class="bi bi-link-45deg"></i> Соцмережі</h3>
+                <p class="cms-hint" style="margin-bottom:1rem">Порожнє поле — іконка прихована.</p>
+                <div class="field"><label><i class="bi bi-facebook"></i> Facebook</label><input id="s-facebook" placeholder="https://facebook.com/..." /></div>
+                <div class="field"><label><i class="bi bi-instagram"></i> Instagram</label><input id="s-instagram" placeholder="https://instagram.com/..." /></div>
+                <div class="field"><label><i class="bi bi-whatsapp"></i> WhatsApp</label><input id="s-whatsapp" placeholder="https://wa.me/..." /></div>
+                <div class="field"><label><i class="bi bi-telegram"></i> Telegram</label><input id="s-telegram" placeholder="https://t.me/..." /></div>
+                <div class="field"><label><i class="bi bi-youtube"></i> YouTube</label><input id="s-youtube" placeholder="https://youtube.com/..." /></div>
+                <h3 class="insp-sub" style="margin-top:1.4rem"><i class="bi bi-geo-alt"></i> Контакти</h3>
+                <div class="field"><label>E-mail</label><input id="c-email" /></div>
+                <div class="field"><label>Телефон</label><input id="c-phone" placeholder="+49 ..." /></div>
+                <div class="field"><label>Адреса (UA)</label><input id="c-addressUk" /></div>
+                <div class="field"><label>Адреса (DE)</label><input id="c-addressDe" /></div>
+                <div class="field"><label>Карта (Google Maps)</label><input id="c-addressUrl" /></div>
+                <div class="field"><label>Розклад (UA)</label><input id="c-scheduleUk" /></div>
+                <div class="field"><label>Розклад (DE)</label><input id="c-scheduleDe" /></div>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
     </main>
@@ -234,6 +259,8 @@
   </div>
 
   <div class="toast-wrap" id="toastWrap"></div>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/blocks.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

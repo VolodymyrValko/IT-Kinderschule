@@ -406,3 +406,47 @@ section { position: relative; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+
+/* ═══════════ Атомарні блоки конструктора ═══════════ */
+.itk-atomic { padding: 26px 0; }
+.itk-atomic--spacer { padding: 0; }
+.itk-atomic--divider { padding: 6px 0; }
+.itk-h { font-size: clamp(1.5rem, 3.2vw, 2.3rem); margin: 0; }
+.itk-text { color: var(--text-soft); font-size: 1.08rem; line-height: 1.7; white-space: pre-wrap; }
+.itk-img { margin: 0; }
+.itk-img img { width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow-md); display: block; }
+.itk-img.w-normal { max-width: 560px; }
+.itk-img.w-wide { max-width: 880px; }
+.itk-img.w-full { max-width: 100%; }
+.itk-img.a-left { margin-right: auto; }
+.itk-img.a-center { margin-left: auto; margin-right: auto; }
+.itk-img.a-right { margin-left: auto; }
+.itk-img-empty { border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px; text-align: center; color: var(--text-mute); font-weight: 700; }
+.itk-spacer.s-s { height: 24px; }
+.itk-spacer.s-m { height: 56px; }
+.itk-spacer.s-l { height: 96px; }
+.itk-divider { border: 0; border-top: 1.5px solid var(--border); margin: 0; }
+
+/* ═══════════ Афорданси редагування (лише ?builder=1) ═══════════ */
+html.itk-builder { scroll-behavior: auto !important; } /* миттєве відновлення позиції після перерендеру */
+.itk-builder .nav { position: static; }
+.itk-builder #scroll-progress, .itk-builder #to-top, .itk-builder #lang, .itk-builder #burger { display: none !important; }
+/* секції з картками/фото — клікабельні для відкриття інспектора */
+.itk-builder #page > .itk-selectable { position: relative; outline: 1.5px dashed transparent; outline-offset: -3px; transition: outline-color 0.15s; cursor: pointer; }
+.itk-builder #page > .itk-selectable:hover { outline-color: rgba(109, 94, 252, 0.5); }
+.itk-builder #page > .itk-selectable.itk-selected { outline: 2px solid var(--violet); }
+/* будь-який редагований текст */
+.itk-builder .itk-editable { cursor: text; border-radius: 5px; transition: box-shadow 0.12s, background 0.12s; }
+.itk-builder .itk-editable:hover { box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.45); background: rgba(34, 211, 238, 0.06); }
+.itk-builder .itk-editable.itk-editing { box-shadow: 0 0 0 2px var(--cyan); background: rgba(34, 211, 238, 0.09); }
+.itk-builder [contenteditable]:focus { outline: none; }
+/* градієнт-текст (показники «350+», заголовки) має прозору заливку — під час
+   редагування робимо текст суцільним, інакше введене не видно */
+.itk-builder .itk-editing { -webkit-text-fill-color: var(--text) !important; color: var(--text) !important; background-image: none !important; }
+
+/* ═══════════ Тематичний скролбар сайту ═══════════ */
+* { scrollbar-width: thin; scrollbar-color: var(--violet) transparent; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--violet) 60%, transparent); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--violet); background-clip: padding-box; }

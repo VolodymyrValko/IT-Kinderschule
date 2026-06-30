@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /api/
 
-# Sitemap: https://ВАШ-ДОМЕН/sitemap.xml
+Sitemap: https://www.it-kinderschule.com/sitemap.xml

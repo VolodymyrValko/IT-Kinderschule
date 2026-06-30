@@ -70,7 +70,7 @@
   }
 
   // ── Навігація між в'юшками ─────────────────────────────────
-  const VIEW_TITLES = { dashboard: 'Огляд', applications: 'Заявки', subscribers: 'Підписники', content: 'Редагування сайту' };
+  const VIEW_TITLES = { dashboard: 'Огляд', applications: 'Заявки', subscribers: 'Підписники', content: 'Конструктор сторінки' };
   $$('.side nav a[data-view]').forEach((a) => {
     a.onclick = () => {
       $$('.side nav a').forEach((x) => x.classList.remove('active'));
@@ -285,23 +285,37 @@
   const ICONS = ['bi-puzzle', 'bi-cpu', 'bi-cpu-fill', 'bi-motherboard', 'bi-robot', 'bi-code-slash', 'bi-braces', 'bi-palette', 'bi-controller', 'bi-mortarboard', 'bi-lightbulb', 'bi-rocket', 'bi-diagram-3', 'bi-window', 'bi-pc-display', 'bi-joystick'];
   const COLORS = [['c-scratch', 'Рожевий'], ['c-microbit', 'Помаранчевий'], ['c-arduino', 'Бірюзовий'], ['c-ai', 'Фіолетовий'], ['c-webdev', 'Синій']];
   const COLOR_HEX = { 'c-scratch': '#f472b6', 'c-microbit': '#ff7a59', 'c-arduino': '#22d3ee', 'c-ai': '#8b5cf6', 'c-webdev': '#6d5efc' };
-  const CATS = [['young', '7–12'], ['teen', '12–18'], ['robotics', 'Робототехніка'], ['coding', 'Програмування']];
+  // Категорії курсу прив'язані до кнопок фільтра на сайті — підпис береться
+  // з відповідного data-i18n (filterYoung/Teen/Robotics/Coding) з урахуванням правок.
+  const CAT_KEYS = [['young', 'filterYoung'], ['teen', 'filterTeen'], ['robotics', 'filterRobotics'], ['coding', 'filterCoding']];
+  function textFor(key) {
+    const ov = draft && draft.texts && draft.texts[cstrLang] && draft.texts[cstrLang][key];
+    if (ov != null && ov !== '') return ov;
+    if (window.I18N && I18N[cstrLang] && I18N[cstrLang][key] != null) return I18N[cstrLang][key];
+    return key;
+  }
 
   function setPath(obj, path, val) {
     const ks = path.split('.'); let o = obj;
     for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]];
     o[ks[ks.length - 1]] = val;
   }
-  function markDirty() {
+  function markDirty(skipPreview) {
     dirty = true;
     const s = $('#cmsStatus'); s.textContent = '● Є незбережені зміни'; s.className = 'cms-status dirty';
+    if (!skipPreview) schedulePreview(); // інлайн-правки тексту не потребують перерендеру полотна
   }
   function setStatusClean() { const s = $('#cmsStatus'); if (!dirty) { s.textContent = ''; s.className = 'cms-status'; } }
 
   function openContentEditor() {
     if (!draft) draft = clone(content);
+    if (!Array.isArray(draft.layout)) draft.layout = clone((content && content.layout) || []);
+    initConstructor();
     renderAllEditors();
+    selectedKey = null;
+    showInspectorPane(null);
     setStatusClean();
+    if (frameReady) postFrame();
   }
   function renderAllEditors() { renderHeroEditor(); renderAboutEditor(); renderCourses(); renderTeachers(); renderGalleryEditor(); renderReviews(); renderFaq(); fillSettings(); }
   function renderColl(coll) { ({ courses: renderCourses, teachers: renderTeachers, reviews: renderReviews, faq: renderFaq }[coll] || (() => {}))(); }
@@ -315,6 +329,8 @@
     ? `<label class="fld-label">${label}</label><textarea data-coll="${coll}" data-idx="${i}" data-path="${path}" rows="3">${esc(val)}</textarea>`
     : `<label class="fld-label">${label}</label><input data-coll="${coll}" data-idx="${i}" data-path="${path}" value="${esc(val)}">`;
 
+  const inlineNote = (txt) => `<p class="cms-hint inline-note"><i class="bi bi-cursor-text"></i> ${txt}</p>`;
+
   function renderCourses() {
     const box = $('#courseEditor');
     if (!draft.courses.length) { box.innerHTML = '<div class="empty-mini">Курсів немає. Натисніть «Додати курс».</div>'; return; }
@@ -325,19 +341,14 @@
           <div class="acts">${moveBtns('courses', i)}</div>
         </div>
         <div class="edit-body">
-          <div class="lang-cols">
-            ${langCol('🇺🇦 Українська', fld('courses', i, 'uk.title', 'Назва', c.uk.title) + '<div style="height:8px"></div>' + fld('courses', i, 'uk.desc', 'Опис', c.uk.desc, true))}
-            ${langCol('🇩🇪 Deutsch', fld('courses', i, 'de.title', 'Назва', c.de.title) + '<div style="height:8px"></div>' + fld('courses', i, 'de.desc', 'Опис', c.de.desc, true))}
-          </div>
-          <div class="edit-row thirds">
-            <div>${fld('courses', i, 'age', 'Вік', c.age)}</div>
+          <div class="edit-row">
             <div><label class="fld-label">Іконка</label><select data-coll="courses" data-idx="${i}" data-path="icon">${ICONS.map((ic) => `<option value="${ic}" ${ic === c.icon ? 'selected' : ''}>${ic.replace('bi-', '')}</option>`).join('')}</select></div>
             <div><label class="fld-label">Колір</label><select data-coll="courses" data-idx="${i}" data-path="cls">${COLORS.map(([v, l]) => `<option value="${v}" ${v === c.cls ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
           </div>
-          <div>${fld('courses', i, 'schedule', 'Розклад', c.schedule)}</div>
           <div><label class="fld-label">Категорії (для фільтра на сайті)</label>
-            <div class="cat-chips">${CATS.map(([v, l]) => `<label><input type="checkbox" data-cat="${v}" data-idx="${i}" ${c.cats.includes(v) ? 'checked' : ''}><span class="c">${l}</span></label>`).join('')}</div>
+            <div class="cat-chips">${CAT_KEYS.map(([v, k]) => `<label><input type="checkbox" data-cat="${v}" data-idx="${i}" ${c.cats.includes(v) ? 'checked' : ''}><span class="c">${esc(textFor(k))}</span></label>`).join('')}</div>
           </div>
+          ${inlineNote('Назву, опис, вік і розклад редагуйте просто на полотні.')}
         </div>
       </div>`).join('');
   }
@@ -349,13 +360,9 @@
       <div class="edit-card">
         <div class="edit-head"><div class="ttl"><span class="dot" style="background:linear-gradient(135deg,#6d5efc,#22d3ee)">${esc(tt.initials)}</span>${esc(tt.uk.name) || 'Викладач'}</div><div class="acts">${moveBtns('teachers', i)}</div></div>
         <div class="edit-body">
-          <label class="fld-label">Фото (необов'язково — якщо порожньо, показуються ініціали)</label>
+          <label class="fld-label">Фото (якщо порожньо — показуються ініціали)</label>
           ${imgPickerHtml(tt.photo, 'teacher', i)}
-          <div style="max-width:140px">${fld('teachers', i, 'initials', 'Ініціали', tt.initials)}</div>
-          <div class="lang-cols">
-            ${langCol('🇺🇦 Українська', fld('teachers', i, 'uk.name', "Ім'я", tt.uk.name) + '<div style="height:8px"></div>' + fld('teachers', i, 'uk.role', 'Роль', tt.uk.role) + '<div style="height:8px"></div>' + fld('teachers', i, 'uk.bio', 'Опис', tt.uk.bio, true))}
-            ${langCol('🇩🇪 Deutsch', fld('teachers', i, 'de.name', 'Name', tt.de.name) + '<div style="height:8px"></div>' + fld('teachers', i, 'de.role', 'Rolle', tt.de.role) + '<div style="height:8px"></div>' + fld('teachers', i, 'de.bio', 'Beschreibung', tt.de.bio, true))}
-          </div>
+          ${inlineNote("Ім'я, роль, опис та ініціали редагуйте на полотні.")}
         </div>
       </div>`).join('');
   }
@@ -364,31 +371,18 @@
     const box = $('#reviewEditor');
     if (!draft.reviews.length) { box.innerHTML = '<div class="empty-mini">Відгуків немає.</div>'; return; }
     box.innerHTML = draft.reviews.map((r, i) => `
-      <div class="edit-card">
-        <div class="edit-head"><div class="ttl"><span class="dot" style="background:linear-gradient(135deg,#6d5efc,#22d3ee)">${esc(r.initials)}</span>${esc(r.uk.name) || 'Відгук'}</div><div class="acts">${moveBtns('reviews', i)}</div></div>
-        <div class="edit-body">
-          <div style="max-width:140px">${fld('reviews', i, 'initials', 'Ініціали', r.initials)}</div>
-          <div class="lang-cols">
-            ${langCol('🇺🇦 Українська', fld('reviews', i, 'uk.text', 'Текст', r.uk.text, true) + '<div style="height:8px"></div>' + fld('reviews', i, 'uk.name', "Ім'я", r.uk.name) + '<div style="height:8px"></div>' + fld('reviews', i, 'uk.role', 'Хто (напр. Мама учня)', r.uk.role))}
-            ${langCol('🇩🇪 Deutsch', fld('reviews', i, 'de.text', 'Text', r.de.text, true) + '<div style="height:8px"></div>' + fld('reviews', i, 'de.name', 'Name', r.de.name) + '<div style="height:8px"></div>' + fld('reviews', i, 'de.role', 'Wer', r.de.role))}
-          </div>
-        </div>
-      </div>`).join('');
+      <div class="edit-card slim">
+        <div class="edit-head"><div class="ttl"><span class="dot" style="background:linear-gradient(135deg,#6d5efc,#22d3ee)">${esc(r.initials) || '•'}</span>${esc(r.uk.name) || esc(r.uk.text).slice(0, 24) || 'Відгук'}</div><div class="acts">${moveBtns('reviews', i)}</div></div>
+      </div>`).join('') + inlineNote('Текст, ім\'я, підпис та ініціали редагуйте на полотні.');
   }
 
   function renderFaq() {
     const box = $('#faqEditor');
     if (!draft.faq.length) { box.innerHTML = '<div class="empty-mini">Запитань немає.</div>'; return; }
     box.innerHTML = draft.faq.map((f, i) => `
-      <div class="edit-card">
+      <div class="edit-card slim">
         <div class="edit-head"><div class="ttl"><span class="dot" style="background:linear-gradient(135deg,#6d5efc,#22d3ee)"><i class="bi bi-question-lg"></i></span>${esc(f.uk.q) || 'Запитання'}</div><div class="acts">${moveBtns('faq', i)}</div></div>
-        <div class="edit-body">
-          <div class="lang-cols">
-            ${langCol('🇺🇦 Українська', fld('faq', i, 'uk.q', 'Запитання', f.uk.q) + '<div style="height:8px"></div>' + fld('faq', i, 'uk.a', 'Відповідь', f.uk.a, true))}
-            ${langCol('🇩🇪 Deutsch', fld('faq', i, 'de.q', 'Frage', f.de.q) + '<div style="height:8px"></div>' + fld('faq', i, 'de.a', 'Antwort', f.de.a, true))}
-          </div>
-        </div>
-      </div>`).join('');
+      </div>`).join('') + inlineNote('Запитання й відповіді редагуйте на полотні.');
   }
 
   function fillSettings() {
@@ -417,42 +411,23 @@
 
   function renderHeroEditor() {
     const h = draft.hero; if (!h) return;
-    const heroFields = (lng) => {
-      const L = h[lng];
-      return `<label class="fld-label">Бейдж (рядок зверху)</label>${inp(`data-obj="hero" data-path="${lng}.pill"`, L.pill)}
-        <div style="height:8px"></div><label class="fld-label">Заголовок (виділення: *слово*)</label>${inp(`data-obj="hero" data-path="${lng}.title"`, L.title)}
-        <div style="height:8px"></div><label class="fld-label">Підзаголовок</label>${inp(`data-obj="hero" data-path="${lng}.subtitle"`, L.subtitle, true)}`;
-    };
-    const statRow = (s, i) => `<div class="edit-row thirds" style="align-items:end">
-      <div><label class="fld-label">Цифра</label>${inp(`data-obj="hero" data-path="stats.${i}.value"`, s.value)}</div>
-      <div><label class="fld-label">Підпис (UA)</label>${inp(`data-obj="hero" data-path="stats.${i}.uk"`, s.uk)}</div>
-      <div><label class="fld-label">Підпис (DE)</label>${inp(`data-obj="hero" data-path="stats.${i}.de"`, s.de)}</div>
-    </div>`;
     $('#heroEditor').innerHTML = `<div class="edit-card"><div class="edit-body">
       <label class="fld-label">Головне фото</label>${imgPickerHtml(h.image, 'hero')}
-      <div class="lang-cols">${langCol('🇺🇦 Українська', heroFields('uk'))}${langCol('🇩🇪 Deutsch', heroFields('de'))}</div>
-      <label class="fld-label">Показники під заголовком (3)</label>
-      <div class="editor-list">${h.stats.map(statRow).join('')}</div>
+      ${inlineNote('Бейдж, заголовок, підзаголовок і показники редагуйте на полотні (виділення слова кольором: *слово*).')}
     </div></div>`;
   }
 
   function renderAboutEditor() {
     const a = draft.about; if (!a) return;
-    const tx = (lng) => `<label class="fld-label">Заголовок</label>${inp(`data-obj="about" data-path="${lng}.title"`, a[lng].title)}
-      <div style="height:8px"></div><label class="fld-label">Текст</label>${inp(`data-obj="about" data-path="${lng}.text"`, a[lng].text, true)}`;
-    const featureRow = (f, i) => `<div class="edit-card"><div class="edit-body">
-      <div style="max-width:240px"><label class="fld-label">Іконка</label>
-        <select data-obj="about" data-path="features.${i}.icon">${FEATURE_ICONS.map((ic) => `<option value="${ic}" ${ic === f.icon ? 'selected' : ''}>${ic.replace('bi-', '')}</option>`).join('')}</select></div>
-      <div class="lang-cols">
-        ${langCol('🇺🇦 Українська', inp(`data-obj="about" data-path="features.${i}.uk.title"`, f.uk.title) + '<div style="height:6px"></div>' + inp(`data-obj="about" data-path="features.${i}.uk.desc"`, f.uk.desc, true))}
-        ${langCol('🇩🇪 Deutsch', inp(`data-obj="about" data-path="features.${i}.de.title"`, f.de.title) + '<div style="height:6px"></div>' + inp(`data-obj="about" data-path="features.${i}.de.desc"`, f.de.desc, true))}
-      </div>
-    </div></div>`;
+    const featureRow = (f, i) => `<div class="feat-row">
+      <span class="feat-prev"><i class="bi ${f.icon || 'bi-check-circle'}"></i></span>
+      <select data-obj="about" data-path="features.${i}.icon">${FEATURE_ICONS.map((ic) => `<option value="${ic}" ${ic === f.icon ? 'selected' : ''}>${ic.replace('bi-', '')}</option>`).join('')}</select>
+    </div>`;
     $('#aboutEditor').innerHTML = `<div class="edit-card"><div class="edit-body">
       <label class="fld-label">Фото секції</label>${imgPickerHtml(a.image, 'about')}
-      <div class="lang-cols">${langCol('🇺🇦 Українська', tx('uk'))}${langCol('🇩🇪 Deutsch', tx('de'))}</div>
-      <label class="fld-label">Переваги</label>
-      <div class="editor-list">${a.features.map(featureRow).join('')}</div>
+      <label class="fld-label" style="margin-top:10px">Іконки переваг</label>
+      <div class="feat-icons">${a.features.map(featureRow).join('')}</div>
+      ${inlineNote('Заголовок, текст і назви/описи переваг редагуйте на полотні.')}
     </div></div>`;
   }
 
@@ -498,30 +473,40 @@
     if (role === 'hero') { draft.hero.image = url; renderHeroEditor(); }
     else if (role === 'about') { draft.about.image = url; renderAboutEditor(); }
     else if (role === 'teacher') { draft.teachers[+idx].photo = url; renderTeachers(); }
+    else if (role === 'block') {
+      const id = $('#inspBlock').dataset.blkId;
+      const b = draft.layout.find((it) => it.kind === 'block' && it.id === id);
+      if (b) { b.data.src = url; renderBlockInspector(b); }
+    }
+    schedulePreview();
   }
 
+  // Нові елементи створюються з текстом-заповнювачем: його видно на полотні
+  // (зрозуміло, де клікати, щоб змінити) і він не зникає під час збереження.
   const blank = {
-    courses: () => ({ id: '', icon: 'bi-mortarboard', cls: 'c-webdev', cats: [], age: '', schedule: 'СБ 16:30–19:00', uk: { title: '', desc: '' }, de: { title: '', desc: '' } }),
-    teachers: () => ({ initials: '', photo: '', uk: { name: '', role: '', bio: '' }, de: { name: '', role: '', bio: '' } }),
-    reviews: () => ({ initials: '', uk: { text: '', name: '', role: '' }, de: { text: '', name: '', role: '' } }),
-    faq: () => ({ uk: { q: '', a: '' }, de: { q: '', a: '' } }),
+    courses: () => ({ id: '', icon: 'bi-mortarboard', cls: 'c-webdev', cats: [], age: '7–12', schedule: 'СБ 16:30–19:00', uk: { title: 'Новий курс', desc: 'Опис курсу — натисніть, щоб змінити.' }, de: { title: 'Neuer Kurs', desc: 'Kursbeschreibung.' } }),
+    teachers: () => ({ initials: 'NN', photo: '', uk: { name: 'Новий викладач', role: 'Роль', bio: 'Короткий опис.' }, de: { name: 'Neue Lehrkraft', role: 'Rolle', bio: 'Kurzbeschreibung.' } }),
+    reviews: () => ({ initials: 'NN', uk: { text: 'Текст відгуку — натисніть, щоб змінити.', name: "Ім'я", role: 'Хто' }, de: { text: 'Bewertungstext.', name: 'Name', role: 'Wer' } }),
+    faq: () => ({ uk: { q: 'Нове запитання?', a: 'Відповідь — натисніть, щоб змінити.' }, de: { q: 'Neue Frage?', a: 'Antwort.' } }),
   };
-  $('#addCourse').onclick = () => { draft.courses.push(blank.courses()); markDirty(); renderCourses(); };
-  $('#addTeacher').onclick = () => { draft.teachers.push(blank.teachers()); markDirty(); renderTeachers(); };
-  $('#addReview').onclick = () => { draft.reviews.push(blank.reviews()); markDirty(); renderReviews(); };
-  $('#addFaq').onclick = () => { draft.faq.push(blank.faq()); markDirty(); renderFaq(); };
-
-  // CMS під-вкладки
-  $('#cmsTabs').addEventListener('click', (e) => {
-    const b = e.target.closest('button'); if (!b) return;
-    $$('#cmsTabs button').forEach((x) => x.classList.remove('active')); b.classList.add('active');
-    ['hero', 'about', 'courses', 'teachers', 'gallery', 'reviews', 'faq', 'settings'].forEach((p) => $('#pane-' + p).classList.toggle('hide', p !== b.dataset.tab));
-  });
+  // Прокрутити правий список до щойно доданого елемента й підсвітити його
+  function scrollToNew(boxSel) {
+    const last = $(boxSel + ' .edit-card:last-child');
+    if (!last) return;
+    last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    last.classList.add('just-added');
+    setTimeout(() => last.classList.remove('just-added'), 1400);
+  }
+  $('#addCourse').onclick = () => { draft.courses.push(blank.courses()); markDirty(); renderCourses(); scrollToNew('#courseEditor'); };
+  $('#addTeacher').onclick = () => { draft.teachers.push(blank.teachers()); markDirty(); renderTeachers(); scrollToNew('#teacherEditor'); };
+  $('#addReview').onclick = () => { draft.reviews.push(blank.reviews()); markDirty(); renderReviews(); scrollToNew('#reviewEditor'); };
+  $('#addFaq').onclick = () => { draft.faq.push(blank.faq()); markDirty(); renderFaq(); scrollToNew('#faqEditor'); };
 
   // Введення тексту (live-оновлення draft)
   $('#content').addEventListener('input', (e) => {
     const el = e.target;
-    if (el.dataset.coll && el.dataset.path) { setPath(draft[el.dataset.coll][+el.dataset.idx], el.dataset.path, el.value); markDirty(); }
+    if (el.dataset.blk) { applyBlockField(el.dataset.blk, el.value); }
+    else if (el.dataset.coll && el.dataset.path) { setPath(draft[el.dataset.coll][+el.dataset.idx], el.dataset.path, el.value); markDirty(); }
     else if (el.dataset.obj && el.dataset.path) { setPath(draft[el.dataset.obj], el.dataset.path, el.value); markDirty(); }
     else if (el.id && el.id.startsWith('s-')) { draft.social[el.id.slice(2)] = el.value; markDirty(); }
     else if (el.id && el.id.startsWith('c-')) { draft.contact[el.id.slice(2)] = el.value; markDirty(); }
@@ -530,6 +515,7 @@
   $('#content').addEventListener('change', async (e) => {
     const el = e.target;
     if (el.type === 'file' && el.dataset.upload) { await handleUpload(el); return; }
+    if (el.dataset.blk) { applyBlockField(el.dataset.blk, el.value); return; }
     if (el.dataset.cat) {
       const arr = draft.courses[+el.dataset.idx].cats, v = el.dataset.cat;
       if (el.checked) { if (!arr.includes(v)) arr.push(v); } else { const k = arr.indexOf(v); if (k >= 0) arr.splice(k, 1); }
@@ -562,7 +548,10 @@
 
   $('#cmsReset').onclick = () => {
     if (dirty && !confirm('Скасувати всі незбережені зміни?')) return;
-    draft = clone(content); dirty = false; renderAllEditors(); setStatusClean();
+    draft = clone(content); dirty = false;
+    selectedKey = null; showInspectorPane(null);
+    renderAllEditors(); setStatusClean();
+    postFrame();
   };
   $('#cmsSave').onclick = async () => {
     const btn = $('#cmsSave'), old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Збереження...';
@@ -572,12 +561,218 @@
       if (!res.ok) throw new Error(saved.error || 'Помилка збереження');
       content = saved; draft = clone(saved); dirty = false; buildCourseMap();
       renderAllEditors();
-      const s = $('#cmsStatus'); s.textContent = 'Збережено та опубліковано ✓'; s.className = 'cms-status saved';
+      const s = $('#cmsStatus'); s.textContent = 'Опубліковано ✓'; s.className = 'cms-status saved';
       toast('Зміни опубліковано на сайті');
+      postFrame();
     } catch (err) { toast(err.message, 'err'); }
     finally { btn.disabled = false; btn.innerHTML = old; }
   };
   window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  // ═══════════════ Контролер конструктора ════════════════════
+  const SECTION_LABELS = { hero: 'Головна', marquee: 'Рядок-стрічка', about: 'Про нас', courses: 'Курси', how: 'Як навчаємо', teachers: 'Викладачі', gallery: 'Галерея', reviews: 'Відгуки', faq: 'FAQ', enroll: 'Форма заявки', newsletter: 'Розсилка' };
+  const SECTION_ICON = { hero: 'bi-house-heart', marquee: 'bi-text-paragraph', about: 'bi-info-circle', courses: 'bi-mortarboard', how: 'bi-diagram-3', teachers: 'bi-people', gallery: 'bi-images', reviews: 'bi-chat-quote', faq: 'bi-question-circle', enroll: 'bi-pencil-square', newsletter: 'bi-envelope-heart' };
+  const BLOCK_LABEL = { heading: 'Заголовок', text: 'Текст', image: 'Фото', button: 'Кнопка', spacer: 'Відступ', divider: 'Лінія' };
+  const ALL_SECTIONS = ['hero', 'marquee', 'about', 'courses', 'how', 'teachers', 'gallery', 'reviews', 'faq', 'enroll', 'newsletter'];
+  const EDITABLE_SECTIONS = ['hero', 'about', 'courses', 'teachers', 'gallery', 'reviews', 'faq'];
+  const STATIC_NOTES = {
+    marquee: 'Рухомий рядок із технологіями. Тексти фіксовані (UA/DE). Тут можна лише прибрати секцію з полотна або перемістити її.',
+    how: 'Секція «Як навчаємо» — 4 кроки. Тексти беруться з перекладів сайту. Тут — лише розташування й наявність.',
+    enroll: 'Форма заявки. Поля та логіка фіксовані. Список курсів у формі береться із секції «Курси».',
+    newsletter: 'Блок підписки на розсилку. Тексти фіксовані (UA/DE).',
+  };
+
+  let frameReady = false, cstrLang = 'uk', selectedKey = null, previewTimer = null, cstrInited = false;
+  const getFrame = () => document.getElementById('cstrFrame');
+  const keyOf = (it) => (it.kind === 'section' ? 'section:' + it.ref : 'block:' + it.id);
+  const layoutIndex = (key) => (draft && draft.layout ? draft.layout.findIndex((it) => keyOf(it) === key) : -1);
+
+  function postFrame(extra) {
+    const f = getFrame(); if (!f || !f.contentWindow || !draft) return;
+    f.contentWindow.postMessage(Object.assign({ itk: true, type: 'render', content: draft, lang: cstrLang, selected: selectedKey }, extra || {}), '*');
+  }
+  function frameSelect() {
+    const f = getFrame(); if (f && f.contentWindow) f.contentWindow.postMessage({ itk: true, type: 'select', key: selectedKey }, '*');
+  }
+  function schedulePreview() { if (!frameReady) return; clearTimeout(previewTimer); previewTimer = setTimeout(() => postFrame(), 280); }
+
+  function onFrameMessage(e) {
+    const m = e.data || {}; if (m.itk !== true) return;
+    if (m.type === 'ready') { frameReady = true; if (draft) postFrame(); }
+    else if (m.type === 'select') { selectInspector(m.key); }
+    else if (m.type === 'editBlock') { applyInlineEdit(m.id, m.field, m.value); }
+    else if (m.type === 'editText') { applyTextEdit(m.key, m.lang, m.value); }
+    else if (m.type === 'editPath') { applyPathEdit(m.path, m.value); }
+  }
+
+  function initConstructor() {
+    if (cstrInited) return; cstrInited = true;
+    $('#cstrLang').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      cstrLang = b.dataset.l; $$('#cstrLang button').forEach((x) => x.classList.toggle('active', x === b)); postFrame();
+    });
+    $('#openSettings').onclick = () => { showInspectorPane('settings'); $('#inspTitle').textContent = 'Контакти / соцмережі'; };
+    $('#openSlots').onclick = () => { showInspectorPane('slots'); $('#inspTitle').textContent = 'Слоти збережень'; };
+    $('#resetDefault').onclick = resetToDefault;
+    $('#slotList').addEventListener('click', onSlotClick);
+    $('#exportContent').onclick = exportContent;
+    $('#importContent').addEventListener('change', importContent);
+    loadSlots();
+  }
+
+  function exportContent() {
+    const data = JSON.stringify(draft, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const d = new Date().toISOString().slice(0, 10);
+    a.href = url; a.download = `it-kinderschule-${d}.json`; a.click();
+    URL.revokeObjectURL(url);
+    toast('Вигляд експортовано у файл');
+  }
+  function importContent(e) {
+    const file = e.target.files[0]; if (!file) { return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const obj = JSON.parse(reader.result);
+        if (!obj || typeof obj !== 'object' || !Array.isArray(obj.courses)) throw new Error('Невірний формат файлу');
+        if (dirty && !confirm('Імпортувати вигляд із файлу? Поточні незбережені зміни буде втрачено.')) { e.target.value = ''; return; }
+        applySnapshot(Object.assign(clone(content), obj)); // відсутні ключі — з поточного
+        toast('Імпортовано. Натисніть «Опублікувати», щоб застосувати на сайті.');
+      } catch (err) { toast('Не вдалося імпортувати: ' + err.message, 'err'); }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  }
+
+  function applyTextEdit(key, lng, value) {
+    if (!draft.texts) draft.texts = { uk: {}, de: {} };
+    if (!draft.texts[lng]) draft.texts[lng] = {};
+    draft.texts[lng][key] = value;
+    markDirty(true);
+    // якщо змінили підпис кнопки фільтра — синхронізуємо назви категорій у редакторі курсів
+    if (['filterYoung', 'filterTeen', 'filterRobotics', 'filterCoding'].includes(key) && selectedKey === 'section:courses') renderCourses();
+  }
+  function applyPathEdit(path, value) {
+    if (!path) return;
+    setPath(draft, path, value);
+    markDirty(true);
+  }
+
+  function applyInlineEdit(id, field, value) {
+    const b = draft.layout.find((it) => it.kind === 'block' && it.id === id); if (!b) return;
+    b.data[cstrLang] = b.data[cstrLang] || {};
+    b.data[cstrLang][field === 'label' ? 'label' : 'text'] = value;
+    markDirty(true);
+    if (selectedKey === 'block:' + id) renderBlockInspector(b);
+  }
+
+  // ── Інспектор ──
+  function showInspectorPane(pane) {
+    $('#inspEmpty').classList.toggle('hide', !!pane);
+    $$('#inspBody .insp-pane').forEach((p) => p.classList.toggle('hide', p.dataset.pane !== pane));
+    if (!pane) $('#inspTitle').textContent = 'Налаштування';
+  }
+  function selectInspector(key) {
+    selectedKey = key || null;
+    if (!key) { showInspectorPane(null); frameSelect(); return; }
+    if (key.startsWith('section:')) {
+      const ref = key.slice(8);
+      if (EDITABLE_SECTIONS.includes(ref)) { showInspectorPane(ref); }
+      else { showInspectorPane('static'); $('#staticNote').textContent = STATIC_NOTES[ref] || 'Ця секція не має полів для редагування тут.'; }
+      $('#inspTitle').textContent = SECTION_LABELS[ref] || ref;
+    } else if (key.startsWith('block:')) {
+      const b = draft.layout.find((it) => it.kind === 'block' && it.id === key.slice(6));
+      if (b) { renderBlockInspector(b); showInspectorPane('block'); $('#inspTitle').textContent = BLOCK_LABEL[b.type] || 'Блок'; }
+      else { showInspectorPane(null); }
+    }
+    frameSelect();
+  }
+  function applyBlockField(path, val) {
+    const id = $('#inspBlock').dataset.blkId;
+    const b = draft.layout.find((it) => it.kind === 'block' && it.id === id);
+    if (!b) return;
+    setPath(b.data, path, val); markDirty();
+  }
+  function renderBlockInspector(b) {
+    const d = b.data, box = $('#inspBlock');
+    const alignSel = (v) => `<select data-blk="align"><option value="left"${v === 'left' ? ' selected' : ''}>Зліва</option><option value="center"${v === 'center' ? ' selected' : ''}>По центру</option><option value="right"${v === 'right' ? ' selected' : ''}>Справа</option></select>`;
+    let html = '';
+    if (b.type === 'heading') {
+      html = `<label class="fld-label">Текст 🇺🇦</label><input data-blk="uk.text" value="${esc(d.uk.text)}">
+        <div style="height:8px"></div><label class="fld-label">Текст 🇩🇪</label><input data-blk="de.text" value="${esc(d.de.text)}">
+        <div class="edit-row"><div><label class="fld-label">Розмір</label><select data-blk="level"><option value="2"${+d.level === 2 ? ' selected' : ''}>Великий</option><option value="3"${+d.level === 3 ? ' selected' : ''}>Менший</option></select></div><div><label class="fld-label">Вирівнювання</label>${alignSel(d.align)}</div></div>`;
+    } else if (b.type === 'text') {
+      html = `<label class="fld-label">Текст 🇺🇦</label><textarea data-blk="uk.text" rows="5">${esc(d.uk.text)}</textarea>
+        <div style="height:8px"></div><label class="fld-label">Текст 🇩🇪</label><textarea data-blk="de.text" rows="5">${esc(d.de.text)}</textarea>
+        <label class="fld-label">Вирівнювання</label>${alignSel(d.align)}
+        <p class="cms-hint" style="margin-top:8px">Кольорове виділення: <code>*слово*</code>.</p>`;
+    } else if (b.type === 'image') {
+      html = `${imgPickerHtml(d.src, 'block')}
+        <label class="fld-label">Опис (alt)</label><input data-blk="alt" value="${esc(d.alt)}">
+        <div class="edit-row"><div><label class="fld-label">Ширина</label><select data-blk="width"><option value="normal"${d.width === 'normal' ? ' selected' : ''}>Звичайна</option><option value="wide"${d.width === 'wide' ? ' selected' : ''}>Широка</option><option value="full"${d.width === 'full' ? ' selected' : ''}>На всю</option></select></div><div><label class="fld-label">Вирівнювання</label>${alignSel(d.align)}</div></div>`;
+    } else if (b.type === 'button') {
+      html = `<label class="fld-label">Напис 🇺🇦</label><input data-blk="uk.label" value="${esc(d.uk.label)}">
+        <div style="height:8px"></div><label class="fld-label">Напис 🇩🇪</label><input data-blk="de.label" value="${esc(d.de.label)}">
+        <label class="fld-label">Посилання</label><input data-blk="href" value="${esc(d.href)}" placeholder="#enroll або https://...">
+        <div class="edit-row"><div><label class="fld-label">Стиль</label><select data-blk="variant"><option value="primary"${d.variant === 'primary' ? ' selected' : ''}>Яскрава</option><option value="ghost"${d.variant === 'ghost' ? ' selected' : ''}>Контурна</option></select></div><div><label class="fld-label">Вирівнювання</label>${alignSel(d.align)}</div></div>`;
+    } else if (b.type === 'spacer') {
+      html = `<label class="fld-label">Розмір відступу</label><select data-blk="size"><option value="s"${d.size === 's' ? ' selected' : ''}>Малий</option><option value="m"${d.size === 'm' ? ' selected' : ''}>Середній</option><option value="l"${d.size === 'l' ? ' selected' : ''}>Великий</option></select>`;
+    } else if (b.type === 'divider') {
+      html = `<p class="cms-hint">Горизонтальна лінія-роздільник. Налаштувань немає.</p>`;
+    }
+    box.dataset.blkId = b.id;
+    box.innerHTML = `<div class="edit-card"><div class="edit-body">${html}</div></div>`;
+  }
+
+  // ── Слоти збережень + стандартний вигляд ──
+  async function loadSlots() {
+    try { const r = await api('/admin/presets'); const d = await r.json(); renderSlots(d.slots || []); } catch (e) { /* ще не залогінені */ }
+  }
+  function renderSlots(slots) {
+    $('#slotList').innerHTML = slots.map((s) => `
+      <div class="slot ${s.empty ? 'empty' : ''}">
+        <div class="slot-info"><b>${s.empty ? 'Слот ' + (s.id + 1) : esc(s.name)}</b><span>${s.empty ? 'порожній' : fmtDate(s.savedAt)}</span></div>
+        <div class="slot-acts">
+          <button class="mini" data-slot-save="${s.id}" title="Зберегти сюди"><i class="bi bi-save"></i></button>
+          ${s.empty ? '' : `<button class="mini" data-slot-load="${s.id}" title="Завантажити"><i class="bi bi-box-arrow-down"></i></button><button class="mini del" data-slot-clear="${s.id}" title="Очистити"><i class="bi bi-x-lg"></i></button>`}
+        </div>
+      </div>`).join('');
+  }
+  async function onSlotClick(e) {
+    const save = e.target.closest('[data-slot-save]'), load = e.target.closest('[data-slot-load]'), clr = e.target.closest('[data-slot-clear]');
+    if (save) {
+      const i = save.dataset.slotSave;
+      const name = prompt('Назва збереження:', 'Варіант ' + (+i + 1));
+      if (name === null) return;
+      try { const r = await api('/admin/presets/' + i, { method: 'PUT', body: JSON.stringify({ name, content: draft }) }); const d = await r.json(); renderSlots(d.slots || []); toast('Збережено у слот'); }
+      catch (err) { toast('Помилка збереження', 'err'); }
+    } else if (load) {
+      if (dirty && !confirm('Завантажити слот? Незбережені зміни на полотні буде втрачено.')) return;
+      const r = await api('/admin/presets/' + load.dataset.slotLoad);
+      if (!r.ok) { toast('Слот порожній', 'err'); return; }
+      applySnapshot(await r.json());
+      toast('Слот завантажено. Натисніть «Опублікувати», щоб застосувати на сайті.');
+    } else if (clr) {
+      if (!confirm('Очистити цей слот?')) return;
+      const r = await api('/admin/presets/' + clr.dataset.slotClear, { method: 'DELETE' });
+      const d = await r.json(); renderSlots(d.slots || []);
+    }
+  }
+  function applySnapshot(snap) {
+    draft = clone(snap);
+    if (!Array.isArray(draft.layout)) draft.layout = [];
+    selectedKey = null; showInspectorPane(null);
+    renderAllEditors(); markDirty(); postFrame();
+  }
+  async function resetToDefault() {
+    if (!confirm('Скинути полотно й увесь контент до стандартного вигляду? Опублікований сайт зміниться лише після «Опублікувати».')) return;
+    try { const r = await api('/admin/default-layout'); applySnapshot(await r.json()); toast('Відновлено стандартний вигляд. Натисніть «Опублікувати».'); }
+    catch (e) { toast('Помилка', 'err'); }
+  }
+
+  window.addEventListener('message', onFrameMessage);
 
   // ── Утиліти ────────────────────────────────────────────────
   function esc(s) { return String(s ?? '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }

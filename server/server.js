@@ -21,7 +21,10 @@ import { fileURLToPath } from 'url';
 import { Applications, Subscribers } from './database.js';
 import { initMailer, sendApplicationMails } from './mailer.js';
 import { createToken, checkCredentials, requireAuth } from './auth.js';
-import { getContent, saveContent, courseMap } from './content.js';
+import {
+  getContent, saveContent, courseMap, stripPresets,
+  listPresets, saveSlot, getSlotSnapshot, clearSlot, getDefaultSnapshot,
+} from './content.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -29,6 +32,8 @@ const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 // можна винести його на змонтований том через змінну UPLOAD_DIR.
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(PUBLIC_DIR, 'images', 'uploads');
 const PROD = process.env.NODE_ENV === 'production';
+// Канонічний домен сайту — для sitemap.xml / robots.txt (SEO).
+const SITE_URL = (process.env.SITE_URL || 'https://www.it-kinderschule.com').replace(/\/+$/, '');
 
 const app = express();
 app.disable('x-powered-by');
@@ -45,6 +50,35 @@ app.use((req, res, next) => {
 
 // Health-check для хостингу (Render/Railway тощо)
 app.get('/healthz', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
+
+// ── SEO: sitemap.xml та robots.txt (домен з SITE_URL) ────────
+app.get('/sitemap.xml', (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const langs = ['uk', 'de'];
+  const alts = [
+    ...langs.map((l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${SITE_URL}/?lang=${l}"/>`),
+    `    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}/"/>`,
+  ].join('\n');
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>${SITE_URL}/</loc>
+${alts}
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.send(xml);
+});
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send(
+    `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n\nSitemap: ${SITE_URL}/sitemap.xml\n`
+  );
+});
 
 // ── Завантаження зображень (multer) ──────────────────────────
 const ALLOWED_IMG = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
@@ -126,7 +160,7 @@ async function validateApplication(b) {
 
 // ── Публічні ендпоінти ───────────────────────────────────────
 app.get('/api/content', async (req, res) => {
-  res.json(await getContent());
+  res.json(stripPresets(await getContent()));
 });
 
 app.post('/api/applications', rateLimit({ windowMs: 60_000, max: 5 }), async (req, res) => {
@@ -167,9 +201,9 @@ app.get('/api/admin/applications', requireAuth, async (req, res) => {
   res.json(await Applications.all());
 });
 
-// Редагування контенту сайту (CMS)
+// Редагування контенту сайту (конструктор)
 app.get('/api/admin/content', requireAuth, async (req, res) => {
-  res.json(await getContent());
+  res.json(stripPresets(await getContent()));
 });
 app.put('/api/admin/content', requireAuth, async (req, res) => {
   try {
@@ -179,6 +213,30 @@ app.put('/api/admin/content', requireAuth, async (req, res) => {
     console.error('Content save error:', e.message);
     res.status(400).json({ error: 'Не вдалося зберегти контент' });
   }
+});
+
+// Слоти кастомних збережень + «стандартний вигляд»
+app.get('/api/admin/presets', requireAuth, async (req, res) => {
+  res.json(await listPresets());
+});
+app.put('/api/admin/presets/:id', requireAuth, async (req, res) => {
+  try {
+    res.json(await saveSlot(req.params.id, req.body?.name, req.body?.content));
+  } catch (e) {
+    res.status(400).json({ error: e.message || 'Не вдалося зберегти слот' });
+  }
+});
+app.get('/api/admin/presets/:id', requireAuth, async (req, res) => {
+  const snap = await getSlotSnapshot(req.params.id);
+  if (!snap) return res.status(404).json({ error: 'Слот порожній' });
+  res.json(snap);
+});
+app.delete('/api/admin/presets/:id', requireAuth, async (req, res) => {
+  res.json(await clearSlot(req.params.id));
+});
+// Знімок «стандартного вигляду» (дефолтні секції + порядок) для скидання полотна
+app.get('/api/admin/default-layout', requireAuth, (req, res) => {
+  res.json(getDefaultSnapshot());
 });
 
 // Завантаження зображення → повертає відносний шлях для контенту
@@ -268,8 +326,24 @@ app.get('/api/admin/export.csv', requireAuth, async (req, res) => {
 // Завантажені зображення (окремий маунт — працює, навіть якщо UPLOAD_DIR
 // винесено на змонтований том поза текою public).
 app.use('/images/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
-app.use(express.static(PUBLIC_DIR, { maxAge: '1h' }));
-app.get('/admin', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin', 'index.html')));
+// HTML/CSS/JS віддаємо з no-cache (revalidate за ETag) — щоб оновлення
+// розмітки/стилів/скриптів застосовувались одразу, без застрягання у кеші.
+// Зображення кешуємо на добу (їхні імена унікальні).
+app.use(express.static(PUBLIC_DIR, {
+  etag: true,
+  setHeaders: (res, filePath) => {
+    res.setHeader('Cache-Control', /\.(html|css|js)$/i.test(filePath) ? 'no-cache' : 'public, max-age=86400');
+  },
+}));
+app.get('/admin', async (req, res) => {
+  try {
+    const html = await fsp.readFile(path.join(PUBLIC_DIR, 'admin', 'index.html'), 'utf8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.type('html').send(html);
+  } catch (e) {
+    res.status(500).send('Admin unavailable');
+  }
+});
 
 // ── Перевірка безпеки перед запуском ─────────────────────────
 function securityCheck() {

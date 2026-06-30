@@ -33,8 +33,8 @@ export const DEFAULT_CONTENT = {
   ],
   hero: {
     image: 'images/20250524_170940.jpg',
-    uk: { pill: 'Школа майбутніх інженерів · Гамбург', title: 'Програмуємо *майбутнє* разом із дітьми', subtitle: 'Захопливі курси робототехніки та програмування для дітей 7–18 років. Від першого робота до власного сайту й проєктів зі штучного інтелекту.' },
-    de: { pill: 'Schule der zukünftigen Ingenieure · Hamburg', title: 'Wir programmieren die *Zukunft* gemeinsam mit Kindern', subtitle: 'Spannende Robotik- und Programmierkurse für Kinder von 7–18 Jahren. Vom ersten Roboter bis zur eigenen Website und KI-Projekten.' },
+    uk: { pill: '', title: 'Програмуємо *майбутнє* разом із дітьми', subtitle: 'Захопливі курси робототехніки та програмування для дітей 7–18 років. Від першого робота до власного сайту й проєктів зі штучного інтелекту.' },
+    de: { pill: '', title: 'Wir programmieren die *Zukunft* gemeinsam mit Kindern', subtitle: 'Spannende Robotik- und Programmierkurse für Kinder von 7–18 Jahren. Vom ersten Roboter bis zur eigenen Website und KI-Projekten.' },
     stats: [
       { value: '350+', uk: 'учнів навчалося', de: 'Schüler unterrichtet' },
       { value: '5', uk: 'напрямків', de: 'Fachrichtungen' },
@@ -90,10 +90,24 @@ export const DEFAULT_CONTENT = {
     scheduleUk: 'Заняття щосуботи, 16:30–19:00',
     scheduleDe: 'Unterricht jeden Samstag, 16:30–19:00',
   },
+  // Перевизначення статичних текстів (data-i18n) — редагуються в адмінці
+  // прямо на полотні. Накладаються поверх перекладів I18N на сайті.
+  texts: { uk: {}, de: {} },
 };
+
+// ── Порядок секцій сторінки за замовчуванням («стандартний вигляд») ──
+// kind:'section' — готова секція сайту; kind:'block' — атомарний елемент
+// (заголовок/текст/фото/кнопка/відступ/лінія), який можна вставляти будь-де.
+export const SECTION_REFS = ['hero', 'marquee', 'about', 'courses', 'how', 'teachers', 'gallery', 'reviews', 'faq', 'enroll', 'newsletter'];
+export const DEFAULT_LAYOUT = SECTION_REFS.map((ref) => ({ kind: 'section', ref }));
+
+// Схема атомарних блоків (значення за замовчуванням + межі санітизації)
+const ALIGN = ['left', 'center', 'right'];
+const ATOMIC_TYPES = ['heading', 'text', 'image', 'button', 'spacer', 'divider'];
 
 let cache = null;
 
+const clone = (o) => JSON.parse(JSON.stringify(o));
 const ICON_RE = /^bi-[a-z0-9-]+$/;
 const VALID_CATS = ['young', 'teen', 'robotics', 'coding'];
 const VALID_CLS = ['c-scratch', 'c-microbit', 'c-arduino', 'c-ai', 'c-webdev'];
@@ -113,6 +127,102 @@ const imgPath = (v) => {
 
 function slug(s) {
   return str(s, 40).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course-' + Date.now();
+}
+
+// Безпечне посилання для блоку-кнопки: якір (#...), відносний (/...),
+// mailto: або http(s). Інакше — порожньо.
+const link = (v) => {
+  const s = str(v, 400);
+  if (!s) return '';
+  if (/^#[\w-]*$/.test(s) || /^\/[\w./#?=&-]*$/.test(s)) return s;
+  if (/^mailto:/i.test(s) || /^https?:\/\//i.test(s)) return s;
+  return '';
+};
+const oneOf = (v, list, def) => (list.includes(v) ? v : def);
+const genId = () => 'blk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+// ── Санітизація даних одного атомарного блоку ────────────────
+function sanitizeBlockData(type, d) {
+  d = d || {};
+  switch (type) {
+    case 'heading':
+      return {
+        level: [2, 3].includes(+d.level) ? +d.level : 2,
+        align: oneOf(d.align, ALIGN, 'left'),
+        uk: { text: str(d?.uk?.text, 200) },
+        de: { text: str(d?.de?.text, 200) || str(d?.uk?.text, 200) },
+      };
+    case 'text':
+      return {
+        align: oneOf(d.align, ALIGN, 'left'),
+        uk: { text: str(d?.uk?.text, 2000) },
+        de: { text: str(d?.de?.text, 2000) || str(d?.uk?.text, 2000) },
+      };
+    case 'image':
+      return {
+        src: imgPath(d.src),
+        alt: str(d.alt, 160),
+        width: oneOf(d.width, ['normal', 'wide', 'full'], 'normal'),
+        align: oneOf(d.align, ALIGN, 'center'),
+      };
+    case 'button':
+      return {
+        align: oneOf(d.align, ALIGN, 'left'),
+        variant: oneOf(d.variant, ['primary', 'ghost'], 'primary'),
+        href: link(d.href) || '#enroll',
+        uk: { label: str(d?.uk?.label, 60) },
+        de: { label: str(d?.de?.label, 60) || str(d?.uk?.label, 60) },
+      };
+    case 'spacer':
+      return { size: oneOf(d.size, ['s', 'm', 'l'], 'm') };
+    case 'divider':
+      return {};
+    default:
+      return {};
+  }
+}
+
+// ── Санітизація перевизначень статичних текстів ──────────────
+const TKEY_RE = /^[A-Za-z0-9_]{1,40}$/;
+function sanitizeTexts(t) {
+  const out = { uk: {}, de: {} };
+  if (!t || typeof t !== 'object') return out;
+  for (const lng of ['uk', 'de']) {
+    const src = t[lng];
+    if (!src || typeof src !== 'object') continue;
+    let n = 0;
+    for (const k of Object.keys(src)) {
+      if (n >= 300) break;
+      if (!TKEY_RE.test(k)) continue;
+      const v = str(src[k], 800);
+      if (v) { out[lng][k] = v; n++; }
+    }
+  }
+  return out;
+}
+
+// ── Санітизація полотна (layout) ─────────────────────────────
+function sanitizeLayout(arr) {
+  if (!Array.isArray(arr)) return clone(DEFAULT_LAYOUT);
+  const out = [];
+  const seenSection = new Set();
+  for (const it of arr.slice(0, 120)) {
+    if (!it || typeof it !== 'object') continue;
+    if (it.kind === 'section') {
+      const ref = String(it.ref || '');
+      if (SECTION_REFS.includes(ref) && !seenSection.has(ref)) {
+        seenSection.add(ref);
+        out.push({ kind: 'section', ref });
+      }
+    } else if (it.kind === 'block') {
+      const type = String(it.type || '');
+      if (ATOMIC_TYPES.includes(type)) {
+        const id = /^blk_[a-z0-9_]+$/i.test(String(it.id || '')) ? it.id : genId();
+        out.push({ kind: 'block', type, id, data: sanitizeBlockData(type, it.data) });
+      }
+    }
+  }
+  return out.length ? out : clone(DEFAULT_LAYOUT);
 }
 
 // ── Санітизація вхідного контенту з адмінки ──────────────────
@@ -211,6 +321,9 @@ function sanitize(input) {
     };
   }
 
+  out.texts = sanitizeTexts(c.texts);
+  out.version = 2;
+  out.layout = sanitizeLayout(c.layout);
   return out;
 }
 
@@ -221,6 +334,17 @@ async function persist(data) {
   await fs.rename(tmp, FILE);
 }
 
+function emptyPresets() { return { slots: [null, null, null] }; }
+
+// Створює нове, повністю заповнене сховище контенту (секції + полотно + пресети)
+function freshStore() {
+  const store = clone(DEFAULT_CONTENT);
+  store.version = 2;
+  store.layout = clone(DEFAULT_LAYOUT);
+  store.presets = emptyPresets();
+  return store;
+}
+
 export async function getContent() {
   if (cache) return cache;
   try {
@@ -228,24 +352,100 @@ export async function getContent() {
     // Доповнюємо відсутні розділи з дефолтів (безпечний апгрейд старих content.json)
     let patched = false;
     for (const key of Object.keys(DEFAULT_CONTENT)) {
-      if (!(key in loaded)) { loaded[key] = JSON.parse(JSON.stringify(DEFAULT_CONTENT[key])); patched = true; }
+      if (!(key in loaded)) { loaded[key] = clone(DEFAULT_CONTENT[key]); patched = true; }
     }
+    // Міграція v1 → v2: додаємо полотно та слоти пресетів
+    if (!Array.isArray(loaded.layout)) { loaded.layout = clone(DEFAULT_LAYOUT); patched = true; }
+    else { loaded.layout = sanitizeLayout(loaded.layout); }
+    if (!loaded.presets || typeof loaded.presets !== 'object' || !Array.isArray(loaded.presets.slots)) {
+      loaded.presets = emptyPresets(); patched = true;
+    }
+    loaded.version = 2;
     cache = loaded;
     if (patched) await persist(cache);
   } catch (e) {
     if (e.code === 'ENOENT') {
-      cache = JSON.parse(JSON.stringify(DEFAULT_CONTENT));
+      cache = freshStore();
       await persist(cache);
     } else throw e;
   }
   return cache;
 }
 
+// Публічний/адмінський вигляд контенту: без службових пресетів
+export function stripPresets(c) {
+  const { presets, ...rest } = c;
+  return rest;
+}
+
 export async function saveContent(input) {
-  const clean = sanitize(input);
+  const clean = sanitize(input); // секції + layout + version
+  if (!cache) await getContent();
+  clean.presets = (cache && cache.presets) || emptyPresets(); // пресети редагуються окремо
   cache = clean;
   await persist(clean);
-  return clean;
+  return stripPresets(clean);
+}
+
+// ── Слоти кастомних збережень + «стандартний вигляд» ─────────
+// Знімок поточного опублікованого стану (секції + полотно, без пресетів)
+function snapshotLive() {
+  const snap = {};
+  for (const key of Object.keys(DEFAULT_CONTENT)) snap[key] = clone(cache[key]);
+  snap.layout = clone(cache.layout);
+  return snap;
+}
+
+export async function listPresets() {
+  await getContent();
+  return {
+    slots: cache.presets.slots.map((sl, i) =>
+      sl ? { id: i, name: sl.name, savedAt: sl.savedAt, empty: false }
+        : { id: i, name: null, savedAt: null, empty: true }),
+  };
+}
+
+export async function saveSlot(i, name, contentInput) {
+  await getContent();
+  const idx = +i;
+  if (!(idx >= 0 && idx < cache.presets.slots.length)) throw new Error('Невірний слот');
+  let snapshot;
+  if (contentInput && typeof contentInput === 'object') {
+    // знімок поточної чернетки (без публікації на сайт)
+    const clean = sanitize(contentInput);
+    delete clean.version;
+    snapshot = clean;
+  } else {
+    snapshot = snapshotLive();
+  }
+  cache.presets.slots[idx] = {
+    name: str(name, 40) || 'Слот ' + (idx + 1),
+    savedAt: new Date().toISOString(),
+    snapshot,
+  };
+  await persist(cache);
+  return listPresets();
+}
+
+export async function getSlotSnapshot(i) {
+  await getContent();
+  const sl = cache.presets.slots[+i];
+  return sl ? clone(sl.snapshot) : null;
+}
+
+export async function clearSlot(i) {
+  await getContent();
+  const idx = +i;
+  if (idx >= 0 && idx < cache.presets.slots.length) cache.presets.slots[idx] = null;
+  await persist(cache);
+  return listPresets();
+}
+
+// «Стандартний вигляд»: дефолтні секції + дефолтний порядок (для скидання полотна)
+export function getDefaultSnapshot() {
+  const snap = clone(DEFAULT_CONTENT);
+  snap.layout = clone(DEFAULT_LAYOUT);
+  return snap;
 }
 
 // id курсів, дозволені у заявці (плюс "unsure")
