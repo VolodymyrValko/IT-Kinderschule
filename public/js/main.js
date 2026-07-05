@@ -258,6 +258,13 @@
     const sub = $('#heroSub'); sub.textContent = L.subtitle || '';
     if (BUILDER) { pill.dataset.itkEdit = `hero.${lang}.pill`; title.dataset.itkEdit = `hero.${lang}.title`; title.dataset.itkRich = '1'; sub.dataset.itkEdit = `hero.${lang}.subtitle`; }
     if (h.image) $('#heroPhoto').src = h.image;
+    // Декоративний фоновий шар банера (розмите фото; редагується в адмінці)
+    const bgEl = $('#heroBg');
+    if (bgEl) {
+      const bg = String(h.bg || '').replace(/["\\]/g, '');
+      if (bg) { bgEl.style.backgroundImage = `url("${bg}")`; bgEl.classList.add('on'); }
+      else { bgEl.classList.remove('on'); bgEl.style.backgroundImage = ''; }
+    }
     $('#heroStats').innerHTML = (h.stats || []).map((s, i) =>
       `<div><div class="num"${editAttr(`hero.stats.${i}.value`)} data-val="${attr(s.value)}">${escHtml(s.value)}</div><div class="lbl"${editAttr(`hero.stats.${i}.${lang}`)}>${escHtml(s[lang] || s.uk)}</div></div>`).join('');
     animateCounters();
@@ -631,6 +638,17 @@
   function setBuilderSelection(key) {
     selectedKey = key || null;
     $$('#page > .itk-selectable').forEach((c) => c.classList.toggle('itk-selected', c.dataset.itkKey === selectedKey));
+  }
+
+  // ── Паралакс декору hero (лише сайт, не полотно конструктора) ──
+  if (!BUILDER && matchMedia('(pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const heroEl = $('#hero'), fl = $('#hero .floaties');
+    if (heroEl && fl) heroEl.addEventListener('mousemove', (e) => {
+      const r = heroEl.getBoundingClientRect();
+      const dx = (e.clientX - r.left) / r.width - 0.5;
+      const dy = (e.clientY - r.top) / r.height - 0.5;
+      fl.style.transform = `translate(${dx * -18}px, ${dy * -14}px)`;
+    }, { passive: true });
   }
 
   // ── Старт ──────────────────────────────────────────────────

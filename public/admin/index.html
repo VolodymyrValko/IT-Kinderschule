@@ -148,7 +148,7 @@
               </div>
 
               <div class="insp-pane hide" data-pane="hero">
-                <p class="cms-hint">Головний банер: фото, заголовок і показники. Виділіть слово зірочками, напр. <code>*майбутнє*</code>.</p>
+                <p class="cms-hint">Головний банер: фото, фонове зображення, заголовок і показники. Виділіть слово зірочками, напр. <code>*майбутнє*</code>.</p>
                 <div id="heroEditor"></div>
               </div>
 
@@ -254,6 +254,20 @@
           <a class="btn ghost sm" id="mMail"><i class="bi bi-envelope"></i> Написати</a>
           <button class="btn sm" id="mSave"><i class="bi bi-check-lg"></i> Зберегти</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ░░ Бібліотека зображень (вибір із завантажених) ░░ -->
+  <div class="modal" id="imgLibModal">
+    <div class="modal-card lib-card">
+      <div class="modal-head">
+        <div><h3><i class="bi bi-images"></i> Бібліотека зображень</h3><p class="cms-hint">Натисніть на фото, щоб використати його — без повторного завантаження.</p></div>
+        <button class="x" id="libClose"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="lib-grid" id="libGrid"></div>
+        <div class="empty hide" id="libEmpty"><i class="bi bi-images" style="font-size:2rem;display:block;margin-bottom:.5rem"></i>Поки що немає зображень.<br>Завантажте перше фото кнопкою «Завантажити».</div>
       </div>
     </div>
   </div>

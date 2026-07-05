@@ -33,6 +33,7 @@ export const DEFAULT_CONTENT = {
   ],
   hero: {
     image: 'images/20250524_170940.jpg',
+    bg: 'images/20240406_143719.jpg', // фонове фото банера (розмите, за текстом); порожньо = вимкнено
     uk: { pill: '', title: 'Програмуємо *майбутнє* разом із дітьми', subtitle: 'Захопливі курси робототехніки та програмування для дітей 7–18 років. Від першого робота до власного сайту й проєктів зі штучного інтелекту.' },
     de: { pill: '', title: 'Wir programmieren die *Zukunft* gemeinsam mit Kindern', subtitle: 'Spannende Robotik- und Programmierkurse für Kinder von 7–18 Jahren. Vom ersten Roboter bis zur eigenen Website und KI-Projekten.' },
     stats: [
@@ -262,6 +263,7 @@ function sanitize(input) {
     const h = c.hero;
     out.hero = {
       image: imgPath(h.image) || DEFAULT_CONTENT.hero.image,
+      bg: imgPath(h.bg), // порожнє значення дозволене — фон вимкнено
       uk: { pill: str(h?.uk?.pill, 80), title: str(h?.uk?.title, 120), subtitle: str(h?.uk?.subtitle, 400) },
       de: { pill: str(h?.de?.pill, 80), title: str(h?.de?.title, 120), subtitle: str(h?.de?.subtitle, 400) },
       stats: (Array.isArray(h.stats) ? h.stats : []).slice(0, 3).map((s) => ({
@@ -353,6 +355,10 @@ export async function getContent() {
     let patched = false;
     for (const key of Object.keys(DEFAULT_CONTENT)) {
       if (!(key in loaded)) { loaded[key] = clone(DEFAULT_CONTENT[key]); patched = true; }
+    }
+    // Міграція: нове поле hero.bg (фонове фото банера) для старих content.json
+    if (loaded.hero && typeof loaded.hero === 'object' && !('bg' in loaded.hero)) {
+      loaded.hero.bg = DEFAULT_CONTENT.hero.bg; patched = true;
     }
     // Міграція v1 → v2: додаємо полотно та слоти пресетів
     if (!Array.isArray(loaded.layout)) { loaded.layout = clone(DEFAULT_LAYOUT); patched = true; }

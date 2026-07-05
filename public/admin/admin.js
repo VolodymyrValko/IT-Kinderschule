@@ -403,6 +403,7 @@
     return `<div class="img-picker">${thumb}
       <div class="pick-actions">
         <label class="btn tiny"><i class="bi bi-upload"></i> Завантажити<input type="file" accept="image/*" data-upload="${role}" ${ix} hidden></label>
+        <button type="button" class="btn ghost tiny" data-libpick="${role}" ${ix}><i class="bi bi-images"></i> З бібліотеки</button>
         ${url ? `<button type="button" class="btn ghost tiny" data-imgclear="${role}" ${ix}><i class="bi bi-x-lg"></i> Прибрати</button>` : ''}
       </div>
       <div class="up-progress hide" data-progress></div>
@@ -413,6 +414,8 @@
     const h = draft.hero; if (!h) return;
     $('#heroEditor').innerHTML = `<div class="edit-card"><div class="edit-body">
       <label class="fld-label">Головне фото</label>${imgPickerHtml(h.image, 'hero')}
+      <label class="fld-label" style="margin-top:8px">Фонове фото банера <span style="color:var(--mute);font-weight:400">(розмите, позаду тексту; «Прибрати» = без фону)</span></label>
+      ${imgPickerHtml(h.bg, 'heroBg')}
       ${inlineNote('Бейдж, заголовок, підзаголовок і показники редагуйте на полотні (виділення слова кольором: *слово*).')}
     </div></div>`;
   }
@@ -441,7 +444,8 @@
         </div></div>
       </div>`).join('');
     const tile = `<label class="gallery-upload-tile"><span style="text-align:center"><i class="bi bi-plus-lg" style="font-size:1.4rem"></i><br>Додати</span><input type="file" accept="image/*" data-upload="gallery" multiple hidden></label>`;
-    $('#galleryEditor').innerHTML = tiles + tile;
+    const libTile = `<button type="button" class="gallery-upload-tile" data-libpick="gallery"><span style="text-align:center"><i class="bi bi-images" style="font-size:1.4rem"></i><br>З бібліотеки</span></button>`;
+    $('#galleryEditor').innerHTML = tiles + tile + libTile;
   }
 
   async function uploadImage(file) {
@@ -471,6 +475,7 @@
   }
   function applyImage(role, idx, url) {
     if (role === 'hero') { draft.hero.image = url; renderHeroEditor(); }
+    else if (role === 'heroBg') { draft.hero.bg = url; renderHeroEditor(); }
     else if (role === 'about') { draft.about.image = url; renderAboutEditor(); }
     else if (role === 'teacher') { draft.teachers[+idx].photo = url; renderTeachers(); }
     else if (role === 'block') {
@@ -535,6 +540,52 @@
     if (mv) { const i = +mv.dataset.idx, j = i + +mv.dataset.gmove; if (j >= 0 && j < draft.gallery.length) { [draft.gallery[i], draft.gallery[j]] = [draft.gallery[j], draft.gallery[i]]; markDirty(); renderGalleryEditor(); } return; }
     const clr = e.target.closest('[data-imgclear]');
     if (clr) { applyImage(clr.dataset.imgclear, clr.dataset.idx, ''); markDirty(); return; }
+    const lib = e.target.closest('[data-libpick]');
+    if (lib) { openImgLib(lib.dataset.libpick, lib.dataset.idx); return; }
+  });
+
+  // ── Бібліотека зображень: вибір із уже завантажених ────────
+  let libTarget = null;
+  // Зображення, які вже використовуються в контенті (включно з вбудованими)
+  function collectContentImages() {
+    const seen = new Set();
+    const add = (u) => { const s = String(u || '').replace(/^\/+/, ''); if (s) seen.add(s); };
+    const src = draft || content || {};
+    if (src.hero) { add(src.hero.image); add(src.hero.bg); }
+    if (src.about) add(src.about.image);
+    (src.gallery || []).forEach(add);
+    (src.teachers || []).forEach((t) => add(t.photo));
+    return [...seen];
+  }
+  async function openImgLib(role, idx) {
+    libTarget = { role, idx };
+    $('#imgLibModal').classList.add('open');
+    $('#libGrid').innerHTML = '<p class="cms-hint" style="padding:16px">Завантаження...</p>';
+    $('#libEmpty').classList.add('hide');
+    let uploads = [];
+    try { const res = await api('/admin/uploads'); uploads = await res.json(); } catch (e) { /* покажемо лише контентні */ }
+    const upUrls = uploads.map((u) => u.url);
+    const extra = collectContentImages().filter((u) => !upUrls.includes(u));
+    const all = [...upUrls, ...extra];
+    if (!all.length) { $('#libGrid').innerHTML = ''; $('#libEmpty').classList.remove('hide'); return; }
+    $('#libGrid').innerHTML = all.map((u) => `
+      <button type="button" class="lib-tile" data-liburl="${esc(u)}" title="${esc(u.split('/').pop())}">
+        <img src="/${esc(u)}" alt="" loading="lazy">
+      </button>`).join('');
+  }
+  function closeImgLib() { $('#imgLibModal').classList.remove('open'); libTarget = null; }
+  $('#libClose').onclick = closeImgLib;
+  $('#imgLibModal').onclick = (e) => { if (e.target.id === 'imgLibModal') closeImgLib(); };
+  $('#libGrid').addEventListener('click', (e) => {
+    const t = e.target.closest('[data-liburl]'); if (!t || !libTarget) return;
+    const url = t.dataset.liburl;
+    if (libTarget.role === 'gallery') {
+      draft.gallery.push(url); markDirty(); renderGalleryEditor();
+      toast('Фото додано в галерею');
+    } else {
+      applyImage(libTarget.role, libTarget.idx, url); markDirty();
+    }
+    closeImgLib();
   });
   // Дії: вгору / вниз / видалити
   $('#content').addEventListener('click', (e) => {
@@ -790,7 +841,7 @@
     $('#toastWrap').appendChild(el);
     setTimeout(() => { el.style.opacity = 0; setTimeout(() => el.remove(), 350); }, 3000);
   }
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#modal').classList.remove('open'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $('#modal').classList.remove('open'); closeImgLib(); } });
 
   // ── Старт ──────────────────────────────────────────────────
   if (token) showApp().catch(() => logout());
