@@ -15,27 +15,27 @@ const FILE = path.join(DATA_DIR, 'content.json');
 // ── Контент за замовчуванням (засів при першому запуску) ──────
 export const DEFAULT_CONTENT = {
   courses: [
-    { id: 'scratch', icon: 'bi-puzzle', cls: 'c-scratch', cats: ['young', 'coding'], age: '7–12', schedule: 'СБ 16:30–19:00',
+    { id: 'scratch', icon: 'bi-puzzle', cls: 'c-scratch', cats: ['young', 'coding'], age: '7–12', schedule: 'SA 16:30–19:00',
       uk: { title: 'Scratch', desc: 'Перші кроки у програмуванні: діти створюють власні ігри та анімації, розвиваючи логіку, креативність і вміння працювати в команді.' },
       de: { title: 'Scratch', desc: 'Erste Schritte beim Programmieren: Kinder erstellen eigene Spiele und Animationen und entwickeln Logik und Kreativität.' } },
-    { id: 'microbit', icon: 'bi-cpu', cls: 'c-microbit', cats: ['young', 'robotics'], age: '10–14', schedule: 'СБ 16:30–19:00',
+    { id: 'microbit', icon: 'bi-cpu', cls: 'c-microbit', cats: ['young', 'robotics'], age: '10–14', schedule: 'SA 16:30–19:00',
       uk: { title: 'BBC micro:bit', desc: 'Діти створюють справжні розумні пристрої на платі BBC micro:bit — сучасному інструменті для навчання робототехніки та програмування.' },
       de: { title: 'BBC micro:bit', desc: 'Kinder bauen echte smarte Geräte mit dem BBC micro:bit — einem modernen Werkzeug für Robotik und Programmierung.' } },
-    { id: 'arduino', icon: 'bi-motherboard', cls: 'c-arduino', cats: ['teen', 'robotics'], age: '12–18', schedule: 'СБ 16:30–19:00',
+    { id: 'arduino', icon: 'bi-motherboard', cls: 'c-arduino', cats: ['teen', 'robotics'], age: '12–18', schedule: 'SA 16:30–19:00',
       uk: { title: 'Arduino', desc: 'Програмування та створення роботів на базі мікроконтролера Arduino. Для тих, хто цікавиться електронікою, схемами та програмуванням.' },
       de: { title: 'Arduino', desc: 'Programmieren und Roboterbau mit dem Mikrocontroller Arduino. Für alle, die sich für Elektronik und Schaltungen interessieren.' } },
-    { id: 'ai', icon: 'bi-cpu-fill', cls: 'c-ai', cats: ['teen', 'robotics', 'coding'], age: '12–18', schedule: 'СБ 16:30–19:00',
+    { id: 'ai', icon: 'bi-cpu-fill', cls: 'c-ai', cats: ['teen', 'robotics', 'coding'], age: '12–18', schedule: 'SA 16:30–19:00',
       uk: { title: 'Штучний інтелект', desc: 'Створюємо та використовуємо роботизовані пристрої на базі штучного інтелекту (AI). Сучасний напрямок для допитливих підлітків.' },
       de: { title: 'Künstliche Intelligenz', desc: 'Wir bauen und nutzen robotergestützte Geräte auf Basis von KI. Eine moderne Richtung für neugierige Jugendliche.' } },
-    { id: 'webdev', icon: 'bi-code-slash', cls: 'c-webdev', cats: ['teen', 'coding'], age: '12–18', schedule: 'СБ 16:30–19:00',
+    { id: 'webdev', icon: 'bi-code-slash', cls: 'c-webdev', cats: ['teen', 'coding'], age: '12–18', schedule: 'SA 16:30–19:00',
       uk: { title: 'HTML + CSS + JS', desc: 'Веброзробка з нуля: від першої сторінки до інтерактивного сайту. Не лише хобі, а й основа майбутньої професії у сфері ІТ.' },
       de: { title: 'HTML + CSS + JS', desc: 'Webentwicklung von Grund auf: von der ersten Seite bis zur interaktiven Website — die Basis für einen IT-Beruf.' } },
   ],
   hero: {
     image: 'images/20250524_170940.jpg',
     bg: 'images/20240406_143719.jpg', // фонове фото банера (розмите, за текстом); порожньо = вимкнено
-    uk: { pill: '', title: 'Програмуємо *майбутнє* разом із дітьми', subtitle: 'Захопливі курси робототехніки та програмування для дітей 7–18 років. Від першого робота до власного сайту й проєктів зі штучного інтелекту.' },
-    de: { pill: '', title: 'Wir programmieren die *Zukunft* gemeinsam mit Kindern', subtitle: 'Spannende Robotik- und Programmierkurse für Kinder von 7–18 Jahren. Vom ersten Roboter bis zur eigenen Website und KI-Projekten.' },
+    uk: { pill: '', title: 'Програмуємо *майбутнє* разом', subtitle: 'Курси робототехніки та програмування для дітей 7–18 років. Від першого робота до власного сайту й проєктів зі штучного інтелекту.' },
+    de: { pill: '', title: 'Wir programmieren die *Zukunft* gemeinsam', subtitle: 'Spannende Robotik- und Programmierkurse für Kinder von 7–18 Jahren. Vom ersten Roboter bis zur eigenen Website und KI-Projekten.' },
     stats: [
       { value: '350+', uk: 'учнів навчалося', de: 'Schüler unterrichtet' },
       { value: '5', uk: 'напрямків', de: 'Fachrichtungen' },
@@ -54,8 +54,8 @@ export const DEFAULT_CONTENT = {
     ],
   },
   teachers: [
-    { initials: 'IT', photo: '', uk: { name: 'Команда викладачів', role: 'Інженери та розробники', bio: 'Практики з досвідом у робототехніці, електроніці та веброзробці, які вміють захопити дітей.' }, de: { name: 'Lehrkräfte-Team', role: 'Ingenieure & Entwickler', bio: 'Praktiker mit Erfahrung in Robotik, Elektronik und Webentwicklung, die Kinder begeistern.' } },
-    { initials: 'AI', photo: '', uk: { name: 'Наставники з AI', role: 'Курс штучного інтелекту', bio: 'Допомагають підліткам зрозуміти, як працює сучасний штучний інтелект — на практиці.' }, de: { name: 'KI-Mentoren', role: 'Kurs künstliche Intelligenz', bio: 'Helfen Jugendlichen praxisnah zu verstehen, wie moderne KI funktioniert.' } },
+    { initials: 'IT', photo: '', uk: { name: 'Команда викладачів', role: 'Інженери та розробники', bio: 'Практики з досвідом у робототехніці, електроніці та веброзробці, які вміють зацікавити технологіями.' }, de: { name: 'Lehrkräfte-Team', role: 'Ingenieure & Entwickler', bio: 'Praktikanten mit Erfahrung in den Bereichen Robotik, Elektronik und Webentwicklung, die das Interesse an Technologien wecken können.' } },
+    { initials: 'AI', photo: '', uk: { name: 'Наставники з AI', role: 'Курс штучного інтелекту', bio: 'Допомагають підліткам зрозуміти, як працює сучасний штучний інтелект — на практиці.' }, de: { name: 'KI-Mentoren', role: 'Kurs künstliche Intelligenz', bio: 'Sie helfen Jugendlichen dabei, in der Praxis zu verstehen, wie moderne künstliche Intelligenz funktioniert.' } },
     { initials: 'RB', photo: '', uk: { name: 'Тренери з робототехніки', role: 'micro:bit та Arduino', bio: 'Перетворюють складні інженерні концепції на захопливі ігрові завдання.' }, de: { name: 'Robotik-Trainer', role: 'micro:bit & Arduino', bio: 'Verwandeln komplexe Technik in spannende, spielerische Aufgaben.' } },
   ],
   reviews: [
@@ -66,9 +66,8 @@ export const DEFAULT_CONTENT = {
   faq: [
     { uk: { q: 'Що потрібно для першого заняття?', a: 'Нічого спеціального — лише гарний настрій і бажання творити. Ноутбуки, плати та набори робототехніки ми надаємо.' }, de: { q: 'Was wird für die erste Stunde benötigt?', a: 'Nichts Besonderes — nur gute Laune. Laptops, Boards und Robotik-Sets stellen wir.' } },
     { uk: { q: 'Дитина ніколи не програмувала. Підійдуть курси?', a: 'Так! Курси розраховані на різний рівень, зокрема абсолютних новачків. Ми починаємо з азів і поступово ускладнюємо.' }, de: { q: 'Mein Kind hat nie programmiert. Passen die Kurse?', a: 'Ja! Die Kurse sind für jedes Niveau, auch für absolute Anfänger. Wir starten bei den Grundlagen.' } },
-    { uk: { q: 'Скільки коштує пробне заняття?', a: 'Перше пробне заняття безкоштовне. Залиште заявку — і ми узгодимо зручний час.' }, de: { q: 'Was kostet die Probestunde?', a: 'Die erste Probestunde ist kostenlos. Senden Sie eine Anfrage — wir finden einen Termin.' } },
-    { uk: { q: 'Де і коли проходять заняття?', a: 'Überseering 26, 22297 Hamburg (Ukraine Haus). Заняття щосуботи, 16:30–19:00.' }, de: { q: 'Wo und wann findet der Unterricht statt?', a: 'Überseering 26, 22297 Hamburg (Ukraine Haus). Jeden Samstag, 16:30–19:00.' } },
-    { uk: { q: 'Якою мовою проходять заняття?', a: 'Заняття проводяться українською мовою у дружньому середовищі. За потреби допоможемо й німецькомовним учням.' }, de: { q: 'In welcher Sprache findet der Unterricht statt?', a: 'Der Unterricht ist auf Ukrainisch in einem freundlichen Umfeld. Deutschsprachige Schüler unterstützen wir ebenfalls.' } },
+    { uk: { q: 'Де і коли проходять заняття?', a: 'Überseering 26, 22297 Hamburg (Ukraine Haus). Заняття по суботах, 16:30–19:00.' }, de: { q: 'Wo und wann findet der Unterricht statt?', a: 'Überseering 26, 22297 Hamburg (Ukraine Haus). Jeden Samstag, 16:30–19:00.' } },
+    { uk: { q: 'Якою мовою проходять заняття?', a: 'Заняття проводяться українською мовою у дружньому середовищі. Викладачі спілкуються обома мовами — німецькою і українською.' }, de: { q: 'In welcher Sprache findet der Unterricht statt?', a: 'Der Unterricht findet in ukrainischer Sprache in einer freundlichen Atmosphäre statt. Die Lehrkräfte kommunizieren in beiden Sprachen – Deutsch und Ukrainisch.' } },
   ],
   gallery: [
     'images/20240217_101500.jpg', 'images/20230415_124730.jpg', 'images/IMG_2810.jpg',
@@ -88,12 +87,31 @@ export const DEFAULT_CONTENT = {
     addressUk: 'Überseering 26, 22297 Hamburg',
     addressDe: 'Überseering 26, 22297 Hamburg',
     addressUrl: 'https://maps.app.goo.gl/1o1XzMTQrUvzUWFv9',
-    scheduleUk: 'Заняття щосуботи, 16:30–19:00',
-    scheduleDe: 'Unterricht jeden Samstag, 16:30–19:00',
+    scheduleUk: 'Заняття по суботах, 16:30–19:00',
+    scheduleDe: 'Unterricht am Samstag, 16:30–19:00',
   },
   // Перевизначення статичних текстів (data-i18n) — редагуються в адмінці
   // прямо на полотні. Накладаються поверх перекладів I18N на сайті.
-  texts: { uk: {}, de: {} },
+  texts: {
+    uk: {
+      badge1: 'Програмування роботів',
+      heroCta1: 'Пробне заняття',
+      filterYoung: '7–12 років',
+      step1d: "Залиште заявку на сайті — ми зв'яжемося з Вами найближчим часом.",
+      step2d: 'Одне заняття, щоб дитина спробувала й обрала напрямок.',
+      step3d: 'Регулярні заняття по суботах в групах із реальними проєктами.',
+      enrollTitle: 'Запишіть дитину на пробне заняття',
+      footAbout: 'Школа робототехніки та програмування для дітей у Гамбурзі. Навчаємо майбутніх інженерів через гру та творчість.',
+    },
+    de: {
+      badge1: 'Programmieren Roboter',
+      heroCta1: 'Probestunde',
+      step2d: 'Eine Probestunde, damit das Kind es ausprobieren und sich für eine Richtung entscheiden kann.',
+      step3d: 'Regelmäßige Kurse samstags in Gruppen mit konkreten Projekten.',
+      enrollTitle: 'Melden Sie Ihr Kind zur Probestunde an',
+      footAbout: 'Schule für Robotik und Programmierung für Kinder in Hamburg. Wir bringen zukünftigen Ingenieuren das Fachwissen durch Spiel und Kreativität bei.',
+    },
+  },
 };
 
 // ── Порядок секцій сторінки за замовчуванням («стандартний вигляд») ──

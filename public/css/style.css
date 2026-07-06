@@ -381,6 +381,8 @@ section { position: relative; }
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
 .reveal.in { opacity: 1; transform: none; }
 .reveal.d1 { transition-delay: 0.08s; } .reveal.d2 { transition-delay: 0.16s; } .reveal.d3 { transition-delay: 0.24s; }
+/* коли анімаціями керує GSAP (html.gsap-on) — CSS-reveal вимикається */
+html.gsap-on .reveal { opacity: 1; transform: none; transition: none; }
 
 /* ---------- Адаптив ---------- */
 @media (max-width: 980px) {

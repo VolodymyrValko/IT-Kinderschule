@@ -19,7 +19,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { Applications, Subscribers } from './database.js';
-import { initMailer, sendApplicationMails } from './mailer.js';
+import {
+  initMailer, sendApplicationMails, sendSubscribeMails,
+  startBroadcast, broadcastStatus, cancelBroadcast,
+} from './mailer.js';
+import { getTemplates, saveTemplates, DEFAULT_TEMPLATES, TEMPLATE_META } from './mail-templates.js';
 import { createToken, checkCredentials, requireAuth } from './auth.js';
 import {
   getContent, saveContent, courseMap, stripPresets,
@@ -185,6 +189,7 @@ app.post('/api/newsletter', rateLimit({ windowMs: 60_000, max: 5 }), async (req,
     return res.status(400).json({ error: 'Невірний e-mail' });
   }
   await Subscribers.create(email);
+  sendSubscribeMails(email).catch((e) => console.error('Subscribe mail error:', e.message));
   res.json({ ok: true });
 });
 
@@ -307,6 +312,42 @@ app.delete('/api/admin/subscribers/:id', requireAuth, async (req, res) => {
   if (!ok) return res.status(404).json({ error: 'Не знайдено' });
   res.json({ ok: true });
 });
+
+// ── Шаблони автоматичних листів (вкладка «Листи») ────────────
+app.get('/api/admin/mail-templates', requireAuth, async (req, res) => {
+  res.json({ templates: await getTemplates(), defaults: DEFAULT_TEMPLATES, meta: TEMPLATE_META });
+});
+app.put('/api/admin/mail-templates', requireAuth, async (req, res) => {
+  try {
+    res.json({ templates: await saveTemplates(req.body || {}) });
+  } catch (e) {
+    console.error('Templates save error:', e.message);
+    res.status(400).json({ error: 'Не вдалося зберегти шаблони' });
+  }
+});
+
+// ── Масова розсилка (вкладка «Розсилка») ─────────────────────
+// Адреси приходять у тілі запиту, використовуються один раз у пам'яті
+// і НЕ зберігаються (ні в БД, ні в логах).
+app.post('/api/admin/broadcast', requireAuth, (req, res) => {
+  const subject = String(req.body?.subject || '').trim().slice(0, 200);
+  const message = String(req.body?.message || '').trim().slice(0, 10000);
+  let emails = Array.isArray(req.body?.emails) ? req.body.emails : [];
+  emails = [...new Set(
+    emails.map((e) => String(e).trim().toLowerCase())
+      .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
+  )].slice(0, 500);
+  if (!subject) return res.status(400).json({ error: 'Вкажіть тему листа' });
+  if (!message) return res.status(400).json({ error: 'Введіть текст повідомлення' });
+  if (!emails.length) return res.status(400).json({ error: 'Не знайдено жодної коректної адреси' });
+  try {
+    res.json(startBroadcast(emails, subject, message));
+  } catch (e) {
+    res.status(409).json({ error: e.message });
+  }
+});
+app.get('/api/admin/broadcast/status', requireAuth, (req, res) => res.json(broadcastStatus()));
+app.delete('/api/admin/broadcast', requireAuth, (req, res) => res.json(cancelBroadcast()));
 
 app.get('/api/admin/export.csv', requireAuth, async (req, res) => {
   const list = await Applications.all();

@@ -70,18 +70,21 @@
   }
 
   // ── Навігація між в'юшками ─────────────────────────────────
-  const VIEW_TITLES = { dashboard: 'Огляд', applications: 'Заявки', subscribers: 'Підписники', content: 'Конструктор сторінки' };
+  const VIEW_TITLES = { dashboard: 'Огляд', applications: 'Заявки', subscribers: 'Підписники', mailing: 'Розсилка', letters: 'Листи', content: 'Конструктор сторінки' };
+  const ALL_VIEWS = ['dashboard', 'applications', 'subscribers', 'mailing', 'letters', 'content'];
   $$('.side nav a[data-view]').forEach((a) => {
     a.onclick = () => {
       $$('.side nav a').forEach((x) => x.classList.remove('active'));
       a.classList.add('active');
       const v = a.dataset.view;
-      ['dashboard', 'applications', 'subscribers', 'content'].forEach((id) => $('#' + id).classList.toggle('hide', id !== v));
+      ALL_VIEWS.forEach((id) => $('#' + id).classList.toggle('hide', id !== v));
       $('#viewTitle').textContent = VIEW_TITLES[v];
       // верхня кнопка «Експорт CSV» (заявки) лише в огляді/заявках
-      $('#exportBtn').style.display = v === 'content' || v === 'subscribers' ? 'none' : '';
+      $('#exportBtn').style.display = v === 'dashboard' || v === 'applications' ? '' : 'none';
       if (v === 'content') openContentEditor();
       if (v === 'subscribers') loadSubscribers();
+      if (v === 'mailing') checkBroadcast();
+      if (v === 'letters') loadTemplates();
     };
   });
 
@@ -278,6 +281,147 @@
     const a = document.createElement('a');
     a.href = url; a.download = 'subscribers.csv'; a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // ═══════════════ Розсилка (масові листи) ═══════════════════
+  // Адреси парсяться з тексту (Excel-стовпець, коми, крапки з комою…),
+  // надсилаються на сервер один раз і ніде не зберігаються.
+  function parseEmails(raw) {
+    const found = String(raw || '').match(/[^\s@,;<>"']+@[^\s@,;<>"']+\.[^\s@,;<>"'.]+/g) || [];
+    return [...new Set(found.map((e) => e.toLowerCase()))];
+  }
+  function updBcCount() {
+    const n = parseEmails($('#bcEmails').value).length;
+    $('#bcCount').textContent = n ? `Знайдено унікальних адрес: ${n}` : '';
+  }
+  $('#bcEmails').addEventListener('input', updBcCount);
+  $('#bcFillSubs').onclick = async () => {
+    const r = await api('/admin/subscribers');
+    const subs = await r.json();
+    if (!subs.length) return toast('Підписників поки немає', 'err');
+    const ta = $('#bcEmails');
+    ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + subs.map((s) => s.email).join('\n');
+    updBcCount();
+    toast(`Додано ${subs.length} адрес підписників`);
+  };
+
+  let bcTimer = null;
+  function bcRender(st) {
+    const running = !!st.running;
+    $('#bcSend').disabled = running;
+    $('#bcCancel').classList.toggle('hide', !running);
+    $('#bcProgress').classList.toggle('hide', !st.exists);
+    if (!st.exists) return;
+    const done = (st.sent || 0) + (st.failed ? st.failed.length : 0);
+    const pct = st.total ? Math.round((done / st.total) * 100) : 0;
+    $('#bcBar').style.width = pct + '%';
+    const fails = st.failed && st.failed.length ? ` · не доставлено: ${st.failed.length} (${st.failed.join(', ')})` : '';
+    $('#bcStatus').textContent = running
+      ? `Надсилання… ${done} із ${st.total}${fails}`
+      : `Готово: надіслано ${st.sent} із ${st.total}${st.cancelled ? ' (зупинено)' : ''}${fails}`;
+  }
+  async function checkBroadcast() {
+    try {
+      const r = await api('/admin/broadcast/status');
+      const st = await r.json();
+      bcRender(st);
+      if (st.running) watchBroadcast();
+    } catch (e) { /* ігноруємо */ }
+  }
+  function watchBroadcast() {
+    clearInterval(bcTimer);
+    bcTimer = setInterval(async () => {
+      try {
+        const r = await api('/admin/broadcast/status');
+        const st = await r.json();
+        bcRender(st);
+        if (!st.running) {
+          clearInterval(bcTimer);
+          toast(st.cancelled ? 'Розсилку зупинено' : `Розсилку завершено: ${st.sent} із ${st.total}`);
+        }
+      } catch (e) { clearInterval(bcTimer); }
+    }, 2000);
+  }
+  $('#bcSend').onclick = async () => {
+    const emails = parseEmails($('#bcEmails').value);
+    const subject = $('#bcSubject').value.trim();
+    const message = $('#bcMessage').value.trim();
+    if (!emails.length) return toast('Вставте хоча б одну адресу', 'err');
+    if (!subject) return toast('Вкажіть тему листа', 'err');
+    if (!message) return toast('Введіть текст повідомлення', 'err');
+    const mins = Math.max(1, Math.round(emails.length * 1.8 / 60));
+    if (!confirm(`Надіслати лист ${emails.length} отримувачам?\nЦе триватиме приблизно ${mins} хв. Адреси не зберігаються.`)) return;
+    const res = await api('/admin/broadcast', { method: 'POST', body: JSON.stringify({ emails, subject, message }) });
+    const d = await res.json();
+    if (!res.ok) return toast(d.error || 'Помилка запуску розсилки', 'err');
+    bcRender(d);
+    watchBroadcast();
+    toast('Розсилку розпочато');
+  };
+  $('#bcCancel').onclick = async () => {
+    if (!confirm('Зупинити розсилку? Уже надіслані листи не скасуються.')) return;
+    const r = await api('/admin/broadcast', { method: 'DELETE' });
+    bcRender(await r.json());
+  };
+
+  // ═══════════════ Листи (шаблони автоматичної пошти) ═════════
+  let tplDefaults = null, tplMeta = null;
+  async function loadTemplates() {
+    const r = await api('/admin/mail-templates');
+    const d = await r.json();
+    tplDefaults = d.defaults; tplMeta = d.meta;
+    renderTemplates(d.templates);
+  }
+  function renderTemplates(tpls) {
+    $('#tplList').innerHTML = Object.keys(tplMeta).map((key) => {
+      const t = tpls[key] || { subject: '', body: '' };
+      const m = tplMeta[key];
+      const chips = (m.placeholders || []).map((p) => `<code class="tpl-ph-chip" data-ph="${p}" data-key="${key}" title="Клік — вставити в текст">{{${p}}}</code>`).join('');
+      return `<div class="edit-card" data-tpl="${key}">
+        <div class="edit-head"><div class="ttl"><span class="dot" style="background:linear-gradient(135deg,#6d5efc,#22d3ee)"><i class="bi bi-envelope"></i></span>${esc(m.label)}</div>
+          <div class="acts"><button class="btn ghost sm" data-tplreset="${key}" title="Повернути стандартний текст"><i class="bi bi-stars"></i> Стандарт</button></div></div>
+        <div class="edit-body">
+          <label class="fld-label">Тема листа (порожня — лист не надсилається)</label>
+          <input data-tplfield="subject" value="${esc(t.subject)}">
+          <label class="fld-label">Текст листа</label>
+          <textarea data-tplfield="body" rows="7">${esc(t.body)}</textarea>
+          <div class="tpl-ph">${chips}</div>
+          ${m.note ? `<p class="cms-hint"><i class="bi bi-info-circle"></i> ${esc(m.note)}</p>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  $('#tplList').addEventListener('click', (e) => {
+    const reset = e.target.closest('[data-tplreset]');
+    if (reset) {
+      const key = reset.dataset.tplreset, card = $(`[data-tpl="${key}"]`), d = tplDefaults[key];
+      card.querySelector('[data-tplfield="subject"]').value = d.subject;
+      card.querySelector('[data-tplfield="body"]').value = d.body;
+      toast('Повернено стандартний текст. Не забудьте «Зберегти листи».');
+      return;
+    }
+    const chip = e.target.closest('.tpl-ph-chip');
+    if (chip) {
+      const ta = $(`[data-tpl="${chip.dataset.key}"] [data-tplfield="body"]`);
+      const ins = `{{${chip.dataset.ph}}}`;
+      const s = ta.selectionStart ?? ta.value.length;
+      ta.value = ta.value.slice(0, s) + ins + ta.value.slice(ta.selectionEnd ?? s);
+      ta.focus(); ta.selectionStart = ta.selectionEnd = s + ins.length;
+    }
+  });
+  $('#tplSave').onclick = async () => {
+    const out = {};
+    $$('#tplList [data-tpl]').forEach((card) => {
+      out[card.dataset.tpl] = {
+        subject: card.querySelector('[data-tplfield="subject"]').value,
+        body: card.querySelector('[data-tplfield="body"]').value,
+      };
+    });
+    const res = await api('/admin/mail-templates', { method: 'PUT', body: JSON.stringify(out) });
+    const d = await res.json();
+    if (!res.ok) return toast(d.error || 'Помилка збереження', 'err');
+    renderTemplates(d.templates);
+    toast('Шаблони листів збережено');
   };
 
   // ═══════════════ Редактор контенту (CMS) ═══════════════════

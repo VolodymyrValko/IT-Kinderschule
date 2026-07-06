@@ -11,6 +11,11 @@
 
   // Режим конструктора (сторінка відкрита в iframe адмінки як ?builder=1)
   const BUILDER = new URLSearchParams(location.search).has('builder');
+  // GSAP-анімації: лише на «живому» сайті, з повагою до reduced-motion.
+  // Якщо CDN недоступний — тихо відкочуємось на IntersectionObserver-reveal.
+  const GSAP_ON = !BUILDER && !!(window.gsap && window.ScrollTrigger)
+    && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (GSAP_ON) gsap.registerPlugin(ScrollTrigger);
   const SECTION_REFS = ['hero', 'marquee', 'about', 'courses', 'how', 'teachers', 'gallery', 'reviews', 'faq', 'enroll', 'newsletter'];
   // ref секції → id відповідного елемента в DOM
   const SECTION_DOM = { hero: 'hero', marquee: 'marquee', about: 'about', courses: 'courses', how: 'how', teachers: 'team', gallery: 'gallery', reviews: 'reviews', faq: 'faq', enroll: 'enroll', newsletter: 'newsletter' };
@@ -283,7 +288,7 @@
   function renderGallery() {
     const wide = new Set([0, 6]), tall = new Set([2]);
     $('#galleryGrid').innerHTML = (CONTENT.gallery || []).map((src, i) =>
-      `<a class="${wide.has(i) ? 'wide' : tall.has(i) ? 'tall' : ''}" data-img="${attr(src)}"><img src="${attr(src)}" alt="Заняття ${i + 1}" loading="lazy"></a>`).join('');
+      `<a class="reveal ${wide.has(i) ? 'wide' : tall.has(i) ? 'tall' : ''}" data-img="${attr(src)}"><img src="${attr(src)}" alt="Заняття ${i + 1}" loading="lazy"></a>`).join('');
   }
 
   // ── Соцмережі та контакти з контенту ───────────────────────
@@ -309,8 +314,7 @@
     const fcl = $('#footerContactList');
     if (fcl) fcl.innerHTML =
       (addr ? `<li><a href="${c.addressUrl || '#'}" target="_blank" rel="noopener">${addr}</a></li>` : '') +
-      (c.email ? `<li><a href="mailto:${c.email}">${c.email}</a></li>` : '') +
-      `<li><a href="/admin">${t('footAdmin')}</a></li>`;
+      (c.email ? `<li><a href="mailto:${c.email}">${c.email}</a></li>` : '');
     const fcourses = $('#footerCoursesList');
     if (fcourses) fcourses.innerHTML = CONTENT.courses.slice(0, 6).map((cc) => `<li><a href="#courses">${cc[lang].title}</a></li>`).join('');
   }
@@ -354,11 +358,59 @@
   // ── Reveal по скролу ───────────────────────────────────────
   let io;
   function observeReveals() {
+    if (GSAP_ON) { gsapReveals(); return; }
     if (io) io.disconnect();
     io = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
     }, { threshold: 0.12 });
     $$('.reveal:not(.in)').forEach((el) => io.observe(el));
+  }
+
+  // ── GSAP: поява карток зі stagger + паралакс (ScrollTrigger) ──
+  // Викликається після кожного рендеру (зміна мови перебудовує сітки):
+  // тригери «мертвих» елементів прибираються, нові — анімуються.
+  let gsapStaticDone = false;
+  function gsapReveals() {
+    document.documentElement.classList.add('gsap-on'); // вимкнути CSS-reveal
+    ScrollTrigger.getAll().forEach((t) => { if (t.trigger && !document.contains(t.trigger)) t.kill(); });
+    const fresh = $$('.reveal').filter((el) => !el.dataset.gsapDone);
+    fresh.forEach((el) => { el.dataset.gsapDone = '1'; el.classList.add('in'); });
+    if (fresh.length) {
+      gsap.set(fresh, { autoAlpha: 0, y: 42 });
+      ScrollTrigger.batch(fresh, {
+        start: 'top 88%',
+        once: true,
+        onEnter: (els) => gsap.to(els, {
+          autoAlpha: 1, y: 0, duration: 0.85, ease: 'power3.out', stagger: 0.09,
+          overwrite: true,
+          clearProps: 'transform', // повернути CSS hover-трансформи карткам
+        }),
+      });
+    }
+    if (!gsapStaticDone) { gsapStaticDone = true; gsapParallax(); }
+    ScrollTrigger.refresh();
+  }
+
+  // Паралакс для «постійних» елементів (не перерендерюються).
+  // Блоби/floaties мають власні CSS-анімації transform — їх не чіпаємо.
+  function gsapParallax() {
+    gsap.to('#hero .hero-visual .photo', {
+      yPercent: 9, ease: 'none',
+      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 0.6 },
+    });
+    gsap.to('#heroBg', {
+      yPercent: 16, ease: 'none',
+      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true },
+    });
+    gsap.fromTo('#aboutPhoto', { y: 36 }, {
+      y: -26, ease: 'none',
+      scrollTrigger: { trigger: '#about', start: 'top bottom', end: 'bottom top', scrub: 0.8 },
+    });
+    // легке «розгортання» стрічки технологій при в'їзді
+    gsap.from('.marquee-track', {
+      autoAlpha: 0, duration: 0.6, ease: 'power2.out',
+      scrollTrigger: { trigger: '.marquee', start: 'top 95%', once: true },
+    });
   }
 
   // ── Лічильники у hero ──────────────────────────────────────

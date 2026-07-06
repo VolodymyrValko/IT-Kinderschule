@@ -173,6 +173,23 @@ tbody tr:hover { background: var(--panel); }
 .gallery-upload-tile { border: 2px dashed var(--border); border-radius: 13px; display: grid; place-items: center; aspect-ratio: 4/3; cursor: pointer; color: var(--mute); font-weight: 700; transition: all 0.2s; background: transparent; font-family: inherit; font-size: inherit; }
 .gallery-upload-tile:hover { border-color: var(--violet); color: var(--violet); }
 
+/* ── Розсилка ── */
+.bc-panel { max-width: 860px; }
+.bc-panel h3 { display: flex; align-items: center; gap: 0.5rem; }
+.bc-meta { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; min-height: 32px; }
+.bc-actions { display: flex; gap: 10px; align-items: center; margin-top: 4px; }
+#bcStatus { word-break: break-word; }
+
+/* ── Листи (шаблони) ── */
+#letters .cms-head { align-items: flex-start; }
+#letters .cms-head .cms-hint { max-width: 640px; line-height: 1.5; }
+#letters code, .tpl-ph-chip { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 1px 7px; font-size: 0.78rem; color: var(--cyan); }
+.tpl-ph { display: flex; flex-wrap: wrap; gap: 5px; }
+.tpl-ph-chip { cursor: pointer; transition: all 0.15s; }
+.tpl-ph-chip:hover { border-color: var(--cyan); color: #fff; }
+#tplList .edit-card { max-width: 860px; }
+#tplList .acts .btn.sm { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
+
 /* Бібліотека зображень */
 .lib-card { max-width: 760px; }
 .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }

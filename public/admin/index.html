@@ -32,6 +32,8 @@
         <a class="active" data-view="dashboard"><i class="bi bi-grid-1x2"></i> Огляд</a>
         <a data-view="applications"><i class="bi bi-inbox"></i> Заявки</a>
         <a data-view="subscribers"><i class="bi bi-envelope-heart"></i> Підписники</a>
+        <a data-view="mailing"><i class="bi bi-megaphone"></i> Розсилка</a>
+        <a data-view="letters"><i class="bi bi-envelope-paper"></i> Листи</a>
         <a data-view="content"><i class="bi bi-pencil-square"></i> Контент</a>
         <a href="/" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Сайт</a>
       </nav>
@@ -116,6 +118,49 @@
           </table>
           <div class="empty hide" id="subsEmpty"><i class="bi bi-envelope-heart" style="font-size:2rem;display:block;margin-bottom:.5rem"></i>Підписників поки немає</div>
         </div>
+      </section>
+
+      <!-- Розсилка (масові листи) -->
+      <section id="mailing" class="hide">
+        <div class="panel bc-panel">
+          <h3><i class="bi bi-megaphone"></i> Масова розсилка від імені школи</h3>
+          <p class="cms-hint" style="margin-top:6px">
+            Вставте адреси (з Excel — просто скопіюйте стовпець), напишіть повідомлення та натисніть «Надіслати».
+            Листи йдуть <b>по одному</b> з паузою ~1,5–2 с — кожен отримувач бачить лише свою адресу, тому лист не виглядає як спам.
+            <b>Адреси ніде не зберігаються</b> — використовуються один раз лише для цієї розсилки.
+            Орієнтовний ліміт Gmail — ~400–500 листів на добу.
+          </p>
+          <div class="field" style="margin-top:14px">
+            <label>Кому — адреси через новий рядок, кому, крапку з комою чи пробіл</label>
+            <textarea id="bcEmails" rows="7" placeholder="mama1@example.com&#10;papa2@example.com&#10;..."></textarea>
+            <div class="bc-meta">
+              <span class="cms-hint" id="bcCount"></span>
+              <button type="button" class="btn ghost sm" id="bcFillSubs"><i class="bi bi-envelope-heart"></i> Підставити підписників</button>
+            </div>
+          </div>
+          <div class="field"><label>Тема листа</label><input id="bcSubject" placeholder="Напр.: Набір на новий навчальний рік 🚀" /></div>
+          <div class="field"><label>Повідомлення</label><textarea id="bcMessage" rows="9" placeholder="Текст листа. Він буде оформлений у фірмовий шаблон школи автоматично."></textarea></div>
+          <div class="bc-actions">
+            <button class="btn" id="bcSend"><i class="bi bi-send"></i> Надіслати</button>
+            <button class="btn danger sm hide" id="bcCancel"><i class="bi bi-x-lg"></i> Зупинити розсилку</button>
+          </div>
+          <div id="bcProgress" class="hide">
+            <div class="bar-track" style="margin-top:16px;height:14px"><div class="bar-fill" id="bcBar" style="width:0%"></div></div>
+            <p class="cms-hint" id="bcStatus" style="margin-top:8px"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Листи (шаблони автоматичної пошти) -->
+      <section id="letters" class="hide">
+        <div class="cms-head">
+          <p class="cms-hint">
+            Тексти листів, які сайт надсилає автоматично. Підстановки на кшталт <code>{{childName}}</code> замінюються
+            реальними даними (клікніть по підстановці, щоб вставити її в текст). Порожня тема = лист вимкнено.
+          </p>
+          <button class="btn sm" id="tplSave"><i class="bi bi-check-lg"></i> Зберегти листи</button>
+        </div>
+        <div id="tplList" class="editor-list" style="margin-top:14px"></div>
       </section>
 
       <!-- Конструктор сторінки -->
