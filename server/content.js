@@ -12,8 +12,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const FILE = path.join(DATA_DIR, 'content.json');
 
+// Кольорові палітри дизайн-системи (мають збігатися зі style.css)
+export const PALETTES = ['aurora', 'sunset', 'ocean', 'forest', 'candy'];
+
 // ── Контент за замовчуванням (засів при першому запуску) ──────
 export const DEFAULT_CONTENT = {
+  palette: 'aurora', // кольорова палітра сайту (вибирається в адмінці)
   courses: [
     { id: 'scratch', icon: 'bi-puzzle', cls: 'c-scratch', cats: ['young', 'coding'], age: '7–12', schedule: 'SA 16:30–19:00',
       uk: { title: 'Scratch', desc: 'Перші кроки у програмуванні: діти створюють власні ігри та анімації, розвиваючи логіку, креативність і вміння працювати в команді.' },
@@ -341,6 +345,7 @@ function sanitize(input) {
     };
   }
 
+  out.palette = PALETTES.includes(c.palette) ? c.palette : 'aurora';
   out.texts = sanitizeTexts(c.texts);
   out.version = 2;
   out.layout = sanitizeLayout(c.layout);

@@ -228,6 +228,21 @@ tbody tr:hover { background: var(--panel); }
 .cstr-frame-wrap { flex: 1; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: #fff; }
 #cstrFrame { width: 100%; height: 100%; border: 0; display: block; }
 
+/* Перемикач кольорової палітри сайту */
+.pal-pick { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
+.pal-pick > i { color: var(--mute); font-size: 0.95rem; }
+.pal-pick button {
+  width: 21px; height: 21px; border-radius: 50%; border: 2px solid transparent; cursor: pointer;
+  background: var(--pg, var(--grad)); padding: 0; transition: transform 0.18s, box-shadow 0.18s;
+}
+.pal-pick button:hover { transform: scale(1.15); }
+.pal-pick button.active { border-color: var(--bg); box-shadow: 0 0 0 2px #fff; transform: scale(1.12); }
+.pal-pick [data-pal='aurora'] { --pg: linear-gradient(135deg, #6d5efc, #22d3ee); }
+.pal-pick [data-pal='sunset'] { --pg: linear-gradient(135deg, #f43f5e, #fb923c); }
+.pal-pick [data-pal='ocean']  { --pg: linear-gradient(135deg, #0ea5e9, #14b8a6); }
+.pal-pick [data-pal='forest'] { --pg: linear-gradient(135deg, #10b981, #84cc16); }
+.pal-pick [data-pal='candy']  { --pg: linear-gradient(135deg, #ec4899, #a855f7); }
+
 .cstr-inspector { display: flex; flex-direction: column; }
 .insp-head { padding: 14px 16px; border-bottom: 1px solid var(--border); font-family: 'Montserrat'; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; position: sticky; top: 0; background: var(--elev); z-index: 2; }
 #inspBody { padding: 16px; }

@@ -461,7 +461,7 @@
     setStatusClean();
     if (frameReady) postFrame();
   }
-  function renderAllEditors() { renderHeroEditor(); renderAboutEditor(); renderCourses(); renderTeachers(); renderGalleryEditor(); renderReviews(); renderFaq(); fillSettings(); }
+  function renderAllEditors() { renderHeroEditor(); renderAboutEditor(); renderCourses(); renderTeachers(); renderGalleryEditor(); renderReviews(); renderFaq(); fillSettings(); syncPaletteUI(); }
   function renderColl(coll) { ({ courses: renderCourses, teachers: renderTeachers, reviews: renderReviews, faq: renderFaq }[coll] || (() => {}))(); }
 
   const moveBtns = (coll, i) =>
@@ -533,6 +533,12 @@
     const s = draft.social || {}, c = draft.contact || {};
     ['facebook', 'instagram', 'whatsapp', 'telegram', 'youtube'].forEach((k) => { const el = $('#s-' + k); if (el) el.value = s[k] || ''; });
     ['email', 'phone', 'addressUk', 'addressDe', 'addressUrl', 'scheduleUk', 'scheduleDe'].forEach((k) => { const el = $('#c-' + k); if (el) el.value = c[k] || ''; });
+  }
+
+  // Перемикач кольорової палітри сайту (значення живе в контенті)
+  function syncPaletteUI() {
+    const p = (draft && draft.palette) || 'aurora';
+    $$('#cstrPalette button[data-pal]').forEach((b) => b.classList.toggle('active', b.dataset.pal === p));
   }
 
   // ── Зображення: завантаження та редактори Hero/About/Gallery ──
@@ -805,6 +811,12 @@
     $('#cstrLang').addEventListener('click', (e) => {
       const b = e.target.closest('button'); if (!b) return;
       cstrLang = b.dataset.l; $$('#cstrLang button').forEach((x) => x.classList.toggle('active', x === b)); postFrame();
+    });
+    $('#cstrPalette').addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-pal]'); if (!b || !draft) return;
+      draft.palette = b.dataset.pal;
+      syncPaletteUI();
+      markDirty(); // перерендер полотна застосує палітру одразу
     });
     $('#openSettings').onclick = () => { showInspectorPane('settings'); $('#inspTitle').textContent = 'Контакти / соцмережі'; };
     $('#openSlots').onclick = () => { showInspectorPane('slots'); $('#inspTitle').textContent = 'Слоти збережень'; };

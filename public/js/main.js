@@ -45,7 +45,10 @@
     contact: { email: 'hackerschoolua@gmail.com', phone: '', addressUk: 'Überseering 26, 22297 Hamburg', addressDe: 'Überseering 26, 22297 Hamburg', addressUrl: 'https://maps.app.goo.gl/1o1XzMTQrUvzUWFv9', scheduleUk: 'Заняття щосуботи, 16:30–19:00', scheduleDe: 'Unterricht jeden Samstag, 16:30–19:00' },
     layout: ['hero', 'marquee', 'about', 'courses', 'how', 'teachers', 'gallery', 'reviews', 'faq', 'enroll', 'newsletter'].map((ref) => ({ kind: 'section', ref })),
     texts: { uk: {}, de: {} },
+    palette: 'aurora',
   };
+  // Кольорові палітри дизайн-системи (мають збігатися зі style.css і сервером)
+  const PALETTES = ['aurora', 'sunset', 'ocean', 'forest', 'candy'];
   const escHtml = (s) => String(s ?? '').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
   const attr = (s) => escHtml(s).replace(/"/g, '&quot;');
   const richify = (s) => escHtml(s).replace(/\*([^*]+)\*/g, '<span class="gradient-text">$1</span>');
@@ -106,6 +109,7 @@
 
   // ── Перемикач мови ─────────────────────────────────────────
   $('#lang').addEventListener('click', (e) => {
+    if (BUILDER) return; // на полотні мову задає адмінка, а клік = редагування підпису
     const b = e.target.closest('button'); if (!b) return;
     lang = b.dataset.lang; localStorage.setItem('lang', lang);
     // Відобразити мову в URL без перезавантаження (синхронно з hreflang).
@@ -113,8 +117,22 @@
     applyI18n();
   });
 
+  // ── Палітра сайту (обирається в адмінці, живе в контенті) ──
+  function applyPalette() {
+    const p = PALETTES.includes(CONTENT.palette) ? CONTENT.palette : 'aurora';
+    document.documentElement.setAttribute('data-palette', p);
+    // на «живому» сайті запам'ятовуємо, щоб наступне відкриття було без блимання
+    if (!BUILDER) try { localStorage.setItem('palette', p); } catch { /* приватний режим */ }
+    const meta = $('meta[name="theme-color"]');
+    if (meta) {
+      const c = getComputedStyle(document.documentElement).getPropertyValue('--p1').trim();
+      if (c) meta.setAttribute('content', c);
+    }
+  }
+
   // ── Рендер динамічних блоків ───────────────────────────────
   function renderDynamic() {
+    applyPalette();
     renderHero();
     renderAbout();
     renderGallery();
@@ -236,14 +254,23 @@
     const layout = (CONTENT.layout && CONTENT.layout.length) ? CONTENT.layout : FALLBACK.layout;
     $$('.itk-atomic', page).forEach((el) => el.remove());
     const used = new Set();
+    // Переміщуємо вузол лише коли він НЕ на своєму місці: зайвий appendChild
+    // рестартує CSS-анімації (нескінченна стрічка технологій обривалась би
+    // на кожному перерендері — зміна мови/теми, правки в конструкторі).
+    let cursor = null;
+    const place = (el) => {
+      const next = cursor ? cursor.nextSibling : page.firstChild;
+      if (next !== el) page.insertBefore(el, next);
+      cursor = el;
+    };
     layout.forEach((item) => {
       if (item.kind === 'section') {
         const el = sectionEl(item.ref);
-        if (el) { el.style.display = ''; el.dataset.itkKey = 'section:' + item.ref; page.appendChild(el); used.add(item.ref); }
+        if (el) { el.style.display = ''; el.dataset.itkKey = 'section:' + item.ref; place(el); used.add(item.ref); }
       } else if (item.kind === 'block' && window.ITKBlocks) {
         const el = ITKBlocks.renderAtomic(item, lang);
         el.dataset.itkKey = 'block:' + item.id;
-        page.appendChild(el);
+        place(el);
       }
     });
     // секції, яких немає в layout, виносимо у прихований сховок (поза #page),
@@ -406,11 +433,9 @@
       y: -26, ease: 'none',
       scrollTrigger: { trigger: '#about', start: 'top bottom', end: 'bottom top', scrub: 0.8 },
     });
-    // легке «розгортання» стрічки технологій при в'їзді
-    gsap.from('.marquee-track', {
-      autoAlpha: 0, duration: 0.6, ease: 'power2.out',
-      scrollTrigger: { trigger: '.marquee', start: 'top 95%', once: true },
-    });
+    // Стрічку технологій НЕ анімуємо GSAP'ом: gsap.from тут ламався після
+    // перерендеру (зміна мови) — трек лишався з inline opacity:0 назавжди.
+    // Її нескінченний рух — чиста CSS-анімація, стійка до перерендерів.
   }
 
   // ── Лічильники у hero ──────────────────────────────────────

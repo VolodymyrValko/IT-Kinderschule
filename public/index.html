@@ -45,9 +45,17 @@
   <link rel="apple-touch-icon" href="images/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Рання ініціалізація теми та палітри (до першого рендеру, без «блимання») -->
+  <script>
+    try {
+      var _t = localStorage.getItem('theme'); if (_t) document.documentElement.setAttribute('data-theme', _t);
+      var _p = localStorage.getItem('palette'); if (_p) document.documentElement.setAttribute('data-palette', _p);
+    } catch (e) {}
+  </script>
 
   <!-- ░░ Структуровані дані Schema.org: організація + локальний бізнес ░░ -->
   <script type="application/ld+json">
@@ -122,8 +130,8 @@
       </nav>
       <div class="nav-tools">
         <div class="lang" id="lang">
-          <button data-lang="uk" class="active">UA</button>
-          <button data-lang="de">DE</button>
+          <button data-lang="uk" class="active" data-i18n="langUa">UA</button>
+          <button data-lang="de" data-i18n="langDe">DE</button>
         </div>
         <button class="icon-btn" id="themeToggle" aria-label="Тема"><i class="bi bi-moon-stars"></i></button>
         <a href="#enroll" class="btn" data-i18n="navCta">Записатися</a>
